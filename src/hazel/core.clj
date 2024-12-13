@@ -1,4 +1,4 @@
-(ns example.core
+(ns hazel.core
   (:require
    [me.tonsky.persistent-sorted-set :as set]
    [ring.adapter.jetty :as jetty]
