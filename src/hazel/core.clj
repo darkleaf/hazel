@@ -8,6 +8,7 @@
 
    [reitit.ring])
   (:import
+   #_(clojure.lang IDeref)
    (org.eclipse.jetty.server Server)
    (me.tonsky.persistent_sorted_set IStorage Branch Leaf Settings)))
 
@@ -18,25 +19,35 @@
   (di/template
    ["/*" (di/ref `resources)]))
 
-(defn resources
+(defn storage
   {::di/kind :component}
-  [_]
-  (reitit.ring/create-resource-handler))
+  []
+  (let [*storage (atom {})
+        settings (Settings.)]
+    (reify IStorage
+      (store [_ node]
+        (let [address (str (random-uuid))]
+          (swap! *storage assoc address
+                 (json/write-value-as-string
+                  {:type (if (instance? Branch node) ;; for js
+                           :branch
+                           :leaf)
+                   :level     (.level node)
+                   :keys      (.keys node)
+                   :addresses (when (instance? Branch node)
+                                (.addresses ^Branch node))}))
+          address))
+      (restore [_ address]
+        (let [blob (get @*storage address)
 
+              {:strs [level
+                      ^java.util.List keys
+                      ^java.util.List addresses]}
+              (json/read-value blob)]
 
-(defn handler
-  {::di/kind :component}
-  [{route-data     `route-data
-    #_#_middleware `middleware}]
-  (let [router (reitit.ring/router route-data)]
-    (reitit.ring/ring-handler
-     router
-     (reitit.ring/routes
-      (reitit.ring/redirect-trailing-slash-handler {:method :strip})
-      (reitit.ring/create-default-handler))
-     {#_#_:inject-match?  true
-      #_#_:inject-router? true
-      #_#_:middleware     middleware})))
+          (if addresses
+            (Branch. (int level) ^java.util.List keys ^java.util.List addresses settings)
+            (Leaf. keys settings)))))))
 
 
 #_
@@ -58,12 +69,6 @@
                  "Cache-control" "public, max-age=604800, immutable"}}
       {:status 404})))
 
-(defn jetty
-  {::di/stop Server/.stop}
-  [{handler `handler}]
-  (jetty/run-jetty handler
-                   {:join? false
-                    :port 8080}))
 
 
 
@@ -80,39 +85,6 @@
 
 
 
-
-
-
-;; (defrecord Storage [*storage ^Settings settings]
-;;   IStorage
-;;   (store [_ node]
-;;     (let [;; node    ^ANode node
-;;           address (str (random-uuid))]
-;;       (swap! *storage assoc address
-;;              (json/write-value-as-string
-;;               {:type (if (instance? Branch node) ;; for js
-;;                        :branch
-;;                        :leaf)
-;;                :level     (.level node)
-;;                :keys      (.keys node)
-;;                :addresses (when (instance? Branch node)
-;;                             (.addresses ^Branch node))}))
-;;       address))
-
-;;   (restore [_ address]
-;;     (let [blob (get @*storage address)
-
-;;           {:strs [level
-;;                   ^java.util.List keys
-;;                   ^java.util.List addresses]}
-;;           (json/read-value blob)]
-
-;;       (if addresses
-;;         (Branch. (int level) ^java.util.List keys ^java.util.List addresses settings)
-;;         (Leaf. keys settings)))))
-
-;; (defn storage ^IStorage [*storage]
-;;   (->Storage *storage (Settings.)))
 
 
 
@@ -157,3 +129,31 @@
 ;;                               :port 8080}))
 
 ;; (.stop server)
+
+
+
+(defn resources
+  {::di/kind :component}
+  [_]
+  (reitit.ring/create-resource-handler))
+
+(defn handler
+  {::di/kind :component}
+  [{route-data     `route-data
+    #_#_middleware `middleware}]
+  (let [router (reitit.ring/router route-data)]
+    (reitit.ring/ring-handler
+     router
+     (reitit.ring/routes
+      (reitit.ring/redirect-trailing-slash-handler {:method :strip})
+      (reitit.ring/create-default-handler))
+     {#_#_:inject-match?  true
+      #_#_:inject-router? true
+      #_#_:middleware     middleware})))
+
+(defn jetty
+  {::di/stop Server/.stop}
+  [{handler `handler}]
+  (jetty/run-jetty handler
+                   {:join? false
+                    :port 8080}))
