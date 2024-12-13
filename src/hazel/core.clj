@@ -1,23 +1,95 @@
 (ns hazel.core
   (:require
-   [me.tonsky.persistent-sorted-set :as set]
-   [ring.adapter.jetty :as jetty]
-   [jsonista.core :as json]
+   borkdude.html
    [clojure.string :as str]
    [darkleaf.di.core :as di]
-
-   [reitit.ring])
+   [jsonista.core :as json]
+   [me.tonsky.persistent-sorted-set :as set]
+   [reitit.ring]
+   [ring.adapter.jetty :as jetty]
+   [ring.util.http-response :as ring.resp])
   (:import
    #_(clojure.lang IDeref)
-   (org.eclipse.jetty.server Server)
-   (me.tonsky.persistent_sorted_set IStorage Branch Leaf Settings)))
+   (me.tonsky.persistent_sorted_set IStorage Branch Leaf Settings)
+   (org.eclipse.jetty.server Server)))
 
 (set! *warn-on-reflection* true)
+
+(comment
+  (def system (di/start `jetty))
+  (di/stop system)
+
+
+  (require '[clojure.repl.deps :as repl.deps])
+  (repl.deps/sync-deps)
+
+  ,)
 
 
 (def route-data
   (di/template
-   ["/*" (di/ref `resources)]))
+   [["/" (di/ref `root)]
+    ["/tests" (di/ref `tests)]
+    ["/assets/*" (di/ref `resources)]]))
+
+(defn layout [& [{:keys [title
+                         importmap
+                         head
+                         body]
+                  :or   {importmap {}}
+                  :as x}]]
+  #html
+  [:<>
+   [:$ "<!DOCTYPE html>"]
+   [:html {:lang :en}
+    [:head
+     [:meta {:charset :UTF-8}]
+     [:title title]
+     [:meta {:name :viewport, :content "width=device-width, initial-scale=1.0"}]
+     [:script {:type :importmap}
+      [:$ (json/write-value-as-string importmap)]]
+     head]
+    [:body body]]])
+
+(defn html-ok [& opts]
+  (-> (layout opts)
+      (str)
+      (ring.resp/ok)
+      (ring.resp/content-type "text/html")))
+
+
+(defn root [_ _req]
+  (html-ok :title "Орешник"))
+
+(defn tests [_ _req]
+  (html-ok
+   {:title "Tests"
+
+    :importmap
+    {:imports {"hazel/" "./assets/"
+               "chai"   "https://cdn.jsdelivr.net/npm/chai/+esm"}}
+
+    :head
+    #html
+    [:<>
+     [:link {:rel :stylesheet, :href "https://unpkg.com/mocha/mocha.css"}]]
+
+    :body
+    #html
+    [:<>
+     [:div {:id "mocha"}]
+     [:script {:src "https://unpkg.com/mocha/mocha.js"}]
+
+     [:script {:type :module, :class :mocha-init}
+      [:$ "mocha.setup('bdd');
+           mocha.checkLeaks();"]]
+
+     [:script {:type :module}
+      [:$ "import 'hazel/sum.test.js'"]]
+
+     [:script {:type :module, :class :mocha-exec}
+      [:$ "mocha.run();"]]]}))
+
 
 (defn storage
   {::di/kind :component}
@@ -72,16 +144,7 @@
 
 
 
-(comment
 
-  (def system (di/start `jetty))
-  (di/stop system)
-
-
-  (require '[clojure.repl.deps :as repl.deps])
-  (repl.deps/sync-deps)
-
-  ,)
 
 
 
@@ -135,7 +198,12 @@
 (defn resources
   {::di/kind :component}
   [_]
-  (reitit.ring/create-resource-handler))
+  (let [h (reitit.ring/create-resource-handler)]
+    (fn [req]
+      (-> req
+          h
+          (ring.resp/header "Cache-Control" "no-cache")))))
+
 
 (defn handler
   {::di/kind :component}
