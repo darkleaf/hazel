@@ -4,13 +4,33 @@
    [ring.adapter.jetty :as jetty]
    [jsonista.core :as json]
    [clojure.string :as str]
-   [darkleaf.di.core :as di])
+   [darkleaf.di.core :as di]
+
+   [reitit.ring])
   (:import
    (org.eclipse.jetty.server Server)
    (me.tonsky.persistent_sorted_set IStorage Branch Leaf Settings)))
 
 (set! *warn-on-reflection* true)
 
+
+(defn handler
+  {::di/kind :component}
+  [{#_#_route-data     `route-data
+    #_#_middleware `middleware}]
+  (let [router (reitit.ring/router
+                ["/*" (reitit.ring/create-resource-handler)])]
+    (reitit.ring/ring-handler
+     router
+     (reitit.ring/routes
+      (reitit.ring/redirect-trailing-slash-handler {:method :strip})
+      (reitit.ring/create-default-handler))
+     {#_#_:inject-match?  true
+      #_#_:inject-router? true
+      #_#_:middleware     middleware})))
+
+
+#_
 (defn handler [_ req]
 
   (prn :req)
@@ -41,8 +61,12 @@
 (comment
 
   (def system (di/start `jetty))
-
   (di/stop system)
+
+
+  (require '[clojure.repl.deps :as repl.deps])
+  (repl.deps/sync-deps)
+
   ,)
 
 
