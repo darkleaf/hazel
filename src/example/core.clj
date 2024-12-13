@@ -14,12 +14,21 @@
 (set! *warn-on-reflection* true)
 
 
+(def route-data
+  (di/template
+   ["/*" (di/ref `resources)]))
+
+(defn resources
+  {::di/kind :component}
+  [_]
+  (reitit.ring/create-resource-handler))
+
+
 (defn handler
   {::di/kind :component}
-  [{#_#_route-data     `route-data
+  [{route-data     `route-data
     #_#_middleware `middleware}]
-  (let [router (reitit.ring/router
-                ["/*" (reitit.ring/create-resource-handler)])]
+  (let [router (reitit.ring/router route-data)]
     (reitit.ring/ring-handler
      router
      (reitit.ring/routes
