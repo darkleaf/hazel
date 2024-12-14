@@ -12,7 +12,8 @@
    #_(clojure.lang IDeref)
    (java.util Comparator)
    (me.tonsky.persistent_sorted_set PersistentSortedSet IStorage Branch Leaf Settings RefType)
-   (org.eclipse.jetty.server Server)))
+   (org.eclipse.jetty.server Server)
+   (com.github.javafaker Faker)))
 
 (set! *warn-on-reflection* true)
 
@@ -148,8 +149,62 @@
 
   ,,,)
 
+(def e 0)
+(def a 1)
+(def v 2)
+
+(defn eav [x y]
+  (cond
+    (> (x e) (y e)) 1
+    (< (x e) (y e)) -1
+    (> (x a) (y a)) 1
+    (< (x a) (y a)) -1
+    (> (x v) (y v)) 1
+    (< (x v) (y v)) -1
+    :else 0))
+
+(defn aev [x y]
+  (cond
+    (> (x a) (y a)) 1
+    (< (x a) (y a)) -1
+    (> (x e) (y e)) 1
+    (< (x e) (y e)) -1
+    (> (x v) (y v)) 1
+    (< (x v) (y v)) -1
+    :else 0))
+
+(defn ave [x y]
+  (cond
+    (> (x a) (y a)) 1
+    (< (x a) (y a)) -1
+    (> (x v) (y v)) 1
+    (< (x v) (y v)) -1
+    (> (x e) (y e)) 1
+    (< (x e) (y e)) -1
+    :else 0))
+
+(defn read-index [idx]
+  (into {}
+        (for [[k v] idx]
+          [k (json/read-value v)])))
+
+(comment
+  (di/with-open [[sorted-set db] (di/start [`sorted-set `db]
+                                           {`branching-factor 4})]
+    (let [f      (Faker.)
+          datoms (mapcat
+                  (fn [i]
+                    [[i "task/title"    (.. f chuckNorris fact)
+                      i "task/assignee" (.. f name fullName)]])
+                  (range 20))
+          eavi   (sorted-set eav)
+          eavi   (into eavi datoms)]
+      (set/store eavi)
+      (read-index @db)))
 
 
+  ;; todo: transact! fn)
+  ,,,)
 
 
 
