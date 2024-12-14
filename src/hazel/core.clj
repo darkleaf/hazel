@@ -10,7 +10,8 @@
    [ring.util.http-response :as ring.resp])
   (:import
    #_(clojure.lang IDeref)
-   (me.tonsky.persistent_sorted_set IStorage Branch Leaf Settings)
+   (java.util Comparator)
+   (me.tonsky.persistent_sorted_set PersistentSortedSet IStorage Branch Leaf Settings RefType)
    (org.eclipse.jetty.server Server)))
 
 (set! *warn-on-reflection* true)
@@ -90,36 +91,66 @@
      [:script {:type :module, :class :mocha-exec}
       [:$ "mocha.run();"]]]}))
 
+(defn db
+  {::di/kind :component}
+  []
+  (atom {}))
+
+(def branching-factor 16) ;; for tests
+
+(defn settings
+  {::di/kind :component}
+  [{branching-factor `branching-factor}]
+  (Settings. branching-factor))
+
+(defn sorted-set
+  [{^Settings settings `settings
+    storage            `storage}
+   ^Comparator cmp]
+  (PersistentSortedSet. {#_meta} cmp storage settings))
 
 (defn storage
   {::di/kind :component}
-  []
-  (let [*storage (atom {})
-        settings (Settings.)]
-    (reify IStorage
-      (store [_ node]
-        (let [address (str (random-uuid))]
-          (swap! *storage assoc address
-                 (json/write-value-as-string
-                  {:type (if (instance? Branch node) ;; for js
-                           :branch
-                           :leaf)
-                   :level     (.level node)
-                   :keys      (.keys node)
-                   :addresses (when (instance? Branch node)
-                                (.addresses ^Branch node))}))
-          address))
-      (restore [_ address]
-        (let [blob (get @*storage address)
+  [{db                 `db
+    ^Settings settings `settings}]
+  (reify IStorage
+    (store [_ node]
+      (let [address (str (random-uuid))]
+        (swap! db assoc address
+               (json/write-value-as-string
+                {:type      (if (instance? Branch node) ;; for js
+                              :branch
+                              :leaf)
+                 :level     (.level node)
+                 :keys      (.keys node)
+                 :addresses (when (instance? Branch node)
+                              (.addresses ^Branch node))}))
+        address))
+    (restore [_ address]
+      (let [blob (get @db address)
 
-              {:strs [level
-                      ^java.util.List keys
-                      ^java.util.List addresses]}
-              (json/read-value blob)]
+            {:strs [level
+                    ^java.util.List keys
+                    ^java.util.List addresses]}
+            (json/read-value blob)]
 
-          (if addresses
-            (Branch. (int level) ^java.util.List keys ^java.util.List addresses settings)
-            (Leaf. keys settings)))))))
+        (if addresses
+          (Branch. (int level) ^java.util.List keys ^java.util.List addresses settings)
+          (Leaf. keys settings))))))
+
+
+(comment
+  (di/with-open [[sorted-set db] (di/start [`sorted-set `db])]
+    (let [s  (sorted-set compare)
+          s' (into s (range 100))]
+      (set/store s')
+      @db))
+
+  ,,,)
+
+
+
+
 
 
 #_
@@ -149,23 +180,6 @@
 
 
 
-
-
-;; (def *storage (atom {}))
-
-
-
-;; (let [storage (storage *storage)
-;;       set     (apply set/sorted-set (range 1000))]
-;;   (set/store set storage))
-;; ;; => "9fa3baff-0ba8-402f-9fdf-35b014331f03"
-
-
-;; (let [storage (storage *storage)
-;;       set (set/restore "9fa3baff-0ba8-402f-9fdf-35b014331f03" storage)
-;;       set (conj set 1005)]
-;;   (set/store set storage))
-;; ;; => "8aa15f17-2369-45a2-af4c-1fd0a727f7c2"
 
 
 ;; (defn- uri->address [s]
