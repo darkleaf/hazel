@@ -33,13 +33,9 @@ describe("", () => {
 
     const set = new BTreeSet(root, loader)
 
-    const all = []
-    for await (const i of set.seek()) {
-      all.push(i)
-    }
-
-
-    expect(all).toEqual([
+    expect(
+      await Array.fromAsync(set.seek())
+    ).toEqual([
       key(1),
       key(2),
       key(3),
