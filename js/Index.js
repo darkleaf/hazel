@@ -1,5 +1,13 @@
 export default class Index {
-  constructor(address, loader) {
+  constructor(
+    address,
+    loader,
+    /*
+      comparator,
+      // а обратный я сам сделаю
+    */
+
+  ) {
     // todo: private?
     this.address = address
     this.loader = loader
@@ -21,7 +29,10 @@ export default class Index {
     }
   }
 
-  seek(/* ? */) {
+  seek(to) {
     return this.seekImpl(this.address)
   }
+
+  //rseek(to) { }
+
 }
