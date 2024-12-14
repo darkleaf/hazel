@@ -10,7 +10,7 @@ export function eav(x, y) {
   if x[a] > y[a] return 1
   if x[a] < y[a] return -1
   if x[v] > y[v] return 1
-  if x[v] < y[v] return 1
+  if x[v] < y[v] return -1
   return 0
 }
 
@@ -20,7 +20,7 @@ export function aev(x, y) {
   if x[e] > y[e] return 1
   if x[e] < y[e] return -1
   if x[v] > y[v] return 1
-  if x[v] < y[v] return 1
+  if x[v] < y[v] return -1
   return 0
 }
 
@@ -28,7 +28,7 @@ export function ave(x, y) {
   if x[a] > y[a] return 1
   if x[a] < y[a] return -1
   if x[v] > y[v] return 1
-  if x[v] < y[v] return 1
+  if x[v] < y[v] return -1
   if x[e] > y[e] return 1
   if x[e] < y[e] return -1
   return 0
