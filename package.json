@@ -1,0 +1,10 @@
+{
+  "name": "hazel",
+  "module": "index.js",
+  "type": "module",
+  "devDependencies": {
+  },
+  "peerDependencies": {
+
+  }
+}
