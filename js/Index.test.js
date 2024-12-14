@@ -2,28 +2,26 @@ import { describe, expect, test } from "bun:test";
 
 import Index from "./Index.js"
 
-
 describe("", () => {
   test("", async () => {
-    const key = x => [x] // to not use primitives
     const db = {
       "1": {
         // type: branch
         level: 1,
-        keys: [key(2), key(4), key(6)],
+        keys: [2, 4, 6],
         addresses: ["2", "3", "4"],
       },
       "2": {
         level: 0,
-        keys: [key(1), key(2)],
+        keys: [1, 2],
       },
       "3": {
         level: 0,
-        keys: [key(3), key(4)],
+        keys: [3, 4],
       },
       "4": {
         level: 0,
-        keys: [key(5), key(6)],
+        keys: [5, 6],
       },
     }
 
@@ -35,13 +33,6 @@ describe("", () => {
 
     expect(
       await Array.fromAsync(set.seek())
-    ).toEqual([
-      key(1),
-      key(2),
-      key(3),
-      key(4),
-      key(5),
-      key(6),
-    ]);
+    ).toEqual([1, 2, 3, 4, 5, 6]);
   });
 });
