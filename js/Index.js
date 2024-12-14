@@ -1,4 +1,4 @@
-export default class BTreeSet {
+export default class Index {
   constructor(address, loader) {
     // todo: private?
     this.address = address

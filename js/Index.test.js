@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import BTreeSet from "./BTreeSet.js"
+import Index from "./Index.js"
 
 
 describe("", () => {
@@ -31,7 +31,7 @@ describe("", () => {
 
     const root = "1"
 
-    const set = new BTreeSet(root, loader)
+    const set = new Index(root, loader)
 
     expect(
       await Array.fromAsync(set.seek())
