@@ -52,14 +52,13 @@ export default class Index {
     const node = await this.loader(addr)
 
     let idx = 0
-    // без нее работает
-    //if (from !== undefined)
-    idx = searchFirst(node.keys, from, this.comparator)
+    if (from !== undefined)
+      idx = searchFirst(node.keys, from, this.comparator)
 
     if (!!node.addresses) { // branch
       for(; idx < node.addresses.length; idx++) {
         const addr = node.addresses[idx]
-        yield* this.seekImpl(addr)
+        yield* this.seekImpl(addr, from)
       }
     } else {
       for(; idx < node.keys.length; idx++) {
@@ -79,7 +78,7 @@ export default class Index {
     if (!!node.addresses) { // branch
       for(; idx >= 0; idx--) {
         const addr = node.addresses[idx]
-        yield* this.rseekImpl(addr)
+        yield* this.rseekImpl(addr, from)
       }
     } else {
       for(; idx >= 0; idx--) {
