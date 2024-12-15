@@ -37,7 +37,6 @@ function aev(x, y) {
   return res
 }
 
-/*
 function ave(x, y) {
   if (x[a] > y[a]) return 1
   if (x[a] < y[a]) return -1
@@ -47,7 +46,6 @@ function ave(x, y) {
   if (x[e] < y[e]) return -1
   return 0
 }
-*/
 
 import Index from "./Index.js"
 
@@ -73,12 +71,22 @@ class AEVIndex extends Index {
   }
 }
 
+class AVEIndex extends Index {
+  async *datoms(fromA, fromV, fromE) {
+    for await (let datom of this.seek([fromE, fromA, fromV])) {
+      if (fromA !== undefined && fromA !== datom[a]) break
+      if (fromV !== undefined && fromV !== datom[v]) break
+      if (fromE !== undefined && fromE !== datom[e]) break
+      yield datom
+    }
+  }
+}
 
 export default class DB {
   constructor(roots, loader) {
     this.eav = new EAVIndex(roots.eav, loader, eav)
     this.aev = new AEVIndex(roots.aev, loader, aev)
-    // this.ave = new Index(roots.ave, loader, ave)
+    this.ave = new AVEIndex(roots.ave, loader, ave)
   }
 
   // rdatoms(index, c1, c2, c3) {
