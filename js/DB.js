@@ -25,13 +25,16 @@ function eav(x, y) {
 
 
 function aev(x, y) {
-  if (x[a] > y[a]) return 1
-  if (x[a] < y[a]) return -1
-  if (x[e] > y[e]) return 1
-  if (x[e] < y[e]) return -1
-  if (x[v] > y[v]) return 1
-  if (x[v] < y[v]) return -1
-  return 0
+  let res = function(){
+    if (x[a] > y[a]) return 1
+    if (x[a] < y[a]) return -1
+    if (x[e] > y[e]) return 1
+    if (x[e] < y[e]) return -1
+    if (x[v] > y[v]) return 1
+    if (x[v] < y[v]) return -1
+    return 0
+  }()
+  return res
 }
 
 /*
@@ -61,7 +64,7 @@ class EAVIndex extends Index {
 
 class AEVIndex extends Index {
   async *datoms(fromA, fromE, fromV) {
-    for await (let datom of this.seek([fromA, fromE, fromV])) {
+    for await (let datom of this.seek([fromE, fromA, fromV])) {
       if (fromA !== undefined && fromA !== datom[a]) break
       if (fromE !== undefined && fromE !== datom[e]) break
       if (fromV !== undefined && fromV !== datom[v]) break
@@ -76,11 +79,6 @@ export default class DB {
     this.eav = new EAVIndex(roots.eav, loader, eav)
     this.aev = new AEVIndex(roots.aev, loader, aev)
     // this.ave = new Index(roots.ave, loader, ave)
-  }
-
-  // читает пока префикс сохраняется
-  datoms(index, c1, c2, c3) {
-
   }
 
   // rdatoms(index, c1, c2, c3) {
