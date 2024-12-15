@@ -6,13 +6,14 @@ const v = 2;
 // from всегда идет в y в searchFirst & searchLast
 function eav(x, y) {
   let res = function(){
-    if (y[e] === undefined) return 1
+    // хуй знает, как это работает, но пусть пока будет закомменчено
+    //if (y[e] === undefined) return 1
     if (x[e] > y[e]) return 1
     if (x[e] < y[e]) return -1
-    if (y[a] === undefined) return 1
+    //if (y[a] === undefined) return 1
     if (x[a] > y[a]) return 1
     if (x[a] < y[a]) return -1
-    if (y[v] === undefined) return 1
+    //if (y[v] === undefined) return 1
     if (x[v] > y[v]) return 1
     if (x[v] < y[v]) return -1
     return 0
@@ -22,7 +23,7 @@ function eav(x, y) {
   return res
 }
 
-/*
+
 function aev(x, y) {
   if (x[a] > y[a]) return 1
   if (x[a] < y[a]) return -1
@@ -33,6 +34,7 @@ function aev(x, y) {
   return 0
 }
 
+/*
 function ave(x, y) {
   if (x[a] > y[a]) return 1
   if (x[a] < y[a]) return -1
@@ -57,11 +59,22 @@ class EAVIndex extends Index {
   }
 }
 
+class AEVIndex extends Index {
+  async *datoms(fromA, fromE, fromV) {
+    for await (let datom of this.seek([fromA, fromE, fromV])) {
+      if (fromA !== undefined && fromA !== datom[a]) break
+      if (fromE !== undefined && fromE !== datom[e]) break
+      if (fromV !== undefined && fromV !== datom[v]) break
+      yield datom
+    }
+  }
+}
+
 
 export default class DB {
   constructor(roots, loader) {
     this.eav = new EAVIndex(roots.eav, loader, eav)
-    // this.aev = new Index(roots.aev, loader, aev)
+    this.aev = new AEVIndex(roots.aev, loader, aev)
     // this.ave = new Index(roots.ave, loader, ave)
   }
 

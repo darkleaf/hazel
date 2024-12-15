@@ -18,116 +18,174 @@ async function loader(addr) {
 const db = new DB(
   {
     eav: ij[0].eavt,
+    aev: ij[0].aevt,
   },
   loader,
 )
 
-describe("eav.datoms", () => {
-  test("", async () => {
-    expect(
-      await Array.fromAsync(db.eav.datoms())
-    ).toEqual([
-      [1,  "i", 0, t],
-      [1,  "j", 0, t],
-      [2,  "i", 0, t],
-      [2,  "j", 1, t],
-      [3,  "i", 0, t],
-      [3,  "j", 2, t],
-      [4,  "i", 0, t],
-      [4,  "j", 3, t],
-      [5,  "i", 1, t],
-      [5,  "j", 0, t],
-      [6,  "i", 1, t],
-      [6,  "j", 1, t],
-      [7,  "i", 1, t],
-      [7,  "j", 2, t],
-      [8,  "i", 1, t],
-      [8,  "j", 3, t],
-      [9,  "i", 2, t],
-      [9,  "j", 0, t],
-      [10, "i", 2, t],
-      [10, "j", 1, t],
-      [11, "i", 2, t],
-      [11, "j", 2, t],
-      [12, "i", 2, t],
-      [12, "j", 3, t],
-      [13, "i", 3, t],
-      [13, "j", 0, t],
-      [14, "i", 3, t],
-      [14, "j", 1, t],
-      [15, "i", 3, t],
-      [15, "j", 2, t],
-      [16, "i", 3, t],
-      [16, "j", 3, t],
-    ]);
-  });
+function testIdx(idx, method, cases) {
+  describe(idx + "." + method, () => {
+    test.each(cases)("%p", async (components, expected) => {
+      expect(
+        await Array.fromAsync(db[idx][method](...components))
+      ).toEqual(expected)
+    })
+  })
+}
 
-  test("e", async () => {
-    expect(
-      await Array.fromAsync(db.eav.datoms(0))
-    ).toEqual([
-    ]);
+testIdx("eav", "datoms", [
+  [[], [
+    [1,  "i", 0, t],
+    [1,  "j", 0, t],
+    [2,  "i", 0, t],
+    [2,  "j", 1, t],
+    [3,  "i", 0, t],
+    [3,  "j", 2, t],
+    [4,  "i", 0, t],
+    [4,  "j", 3, t],
+    [5,  "i", 1, t],
+    [5,  "j", 0, t],
+    [6,  "i", 1, t],
+    [6,  "j", 1, t],
+    [7,  "i", 1, t],
+    [7,  "j", 2, t],
+    [8,  "i", 1, t],
+    [8,  "j", 3, t],
+    [9,  "i", 2, t],
+    [9,  "j", 0, t],
+    [10, "i", 2, t],
+    [10, "j", 1, t],
+    [11, "i", 2, t],
+    [11, "j", 2, t],
+    [12, "i", 2, t],
+    [12, "j", 3, t],
+    [13, "i", 3, t],
+    [13, "j", 0, t],
+    [14, "i", 3, t],
+    [14, "j", 1, t],
+    [15, "i", 3, t],
+    [15, "j", 2, t],
+    [16, "i", 3, t],
+    [16, "j", 3, t],
+  ]],
 
-    expect(
-      await Array.fromAsync(db.eav.datoms(1))
-    ).toEqual([
-      [1,  "i", 0, t],
-      [1,  "j", 0, t],
-    ]);
+  [[0], [
+  ]],
 
-    expect(
-      await Array.fromAsync(db.eav.datoms(2))
-    ).toEqual([
-      [2,  "i", 0, t],
-      [2,  "j", 1, t],
-    ]);
+  [[1], [
+    [1,  "i", 0, t],
+    [1,  "j", 0, t],
+  ]],
 
-    expect(
-      await Array.fromAsync(db.eav.datoms(16))
-    ).toEqual([
-      [16, "i", 3, t],
-      [16, "j", 3, t],
-    ]);
+  [[2], [
+    [2,  "i", 0, t],
+    [2,  "j", 1, t],
+  ]],
 
-    expect(
-      await Array.fromAsync(db.eav.datoms(17))
-    ).toEqual([
-    ]);
-  });
+  [[16], [
+    [16, "i", 3, t],
+    [16, "j", 3, t],
+  ]],
 
-  test("ea", async () => {
-    expect(
-      await Array.fromAsync(db.eav.datoms(0, "a"))
-    ).toEqual([
-    ]);
+  [[17], [
+  ]],
 
-    expect(
-      await Array.fromAsync(db.eav.datoms(1, "i"))
-    ).toEqual([
-      [1,  "i", 0, t],
-    ]);
+  [[0, "a"], [
+  ]],
 
-    expect(
-      await Array.fromAsync(db.eav.datoms(17, "z"))
-    ).toEqual([
-    ]);
-  });
+  [[1, "i"], [
+    [1,  "i", 0, t],
+  ]],
 
-  test("eav", async () => {
-    expect(
-      await Array.fromAsync(db.eav.datoms(0, "a", 0))
-    ).toEqual([
-    ]);
+  [[17, "z"], [
+  ]],
 
-    expect(
-      await Array.fromAsync(db.eav.datoms(1, "i", 0))
-    ).toEqual([
-      [1,  "i", 0, t],
-    ]);
+  [[0, "a", 0], [
+  ]],
 
-    expect(
-      await Array.fromAsync(db.eav.datoms(17, "z", 9))
-    ).toEqual([
-    ]);
-  });
-});
+  [[1, "i", 0], [
+    [1,  "i", 0, t],
+  ]],
+
+  [[17, "z", 9], [
+  ]],
+
+])
+
+testIdx("aev", "datoms", [
+  [[], [
+    [1,  "i", 0, t],
+    [2,  "i", 0, t],
+    [3,  "i", 0, t],
+    [4,  "i", 0, t],
+    [5,  "i", 1, t],
+    [6,  "i", 1, t],
+    [7,  "i", 1, t],
+    [8,  "i", 1, t],
+    [9,  "i", 2, t],
+    [10, "i", 2, t],
+    [11, "i", 2, t],
+    [12, "i", 2, t],
+    [13, "i", 3, t],
+    [14, "i", 3, t],
+    [15, "i", 3, t],
+    [16, "i", 3, t],
+    [1,  "j", 0, t],
+    [2,  "j", 1, t],
+    [3,  "j", 2, t],
+    [4,  "j", 3, t],
+    [5,  "j", 0, t],
+    [6,  "j", 1, t],
+    [7,  "j", 2, t],
+    [8,  "j", 3, t],
+    [9,  "j", 0, t],
+    [10, "j", 1, t],
+    [11, "j", 2, t],
+    [12, "j", 3, t],
+    [13, "j", 0, t],
+    [14, "j", 1, t],
+    [15, "j", 2, t],
+    [16, "j", 3, t],
+  ]],
+
+  [["a"], [
+  ]],
+
+  [["i"], [
+    [1,  "i", 0, t],
+    [2,  "i", 0, t],
+    [3,  "i", 0, t],
+    [4,  "i", 0, t],
+    [5,  "i", 1, t],
+    [6,  "i", 1, t],
+    [7,  "i", 1, t],
+    [8,  "i", 1, t],
+    [9,  "i", 2, t],
+    [10, "i", 2, t],
+    [11, "i", 2, t],
+    [12, "i", 2, t],
+    [13, "i", 3, t],
+    [14, "i", 3, t],
+    [15, "i", 3, t],
+    [16, "i", 3, t],
+  ]],
+
+  [["j"], [
+    [1,  "j", 0, t],
+    [2,  "j", 1, t],
+    [3,  "j", 2, t],
+    [4,  "j", 3, t],
+    [5,  "j", 0, t],
+    [6,  "j", 1, t],
+    [7,  "j", 2, t],
+    [8,  "j", 3, t],
+    [9,  "j", 0, t],
+    [10, "j", 1, t],
+    [11, "j", 2, t],
+    [12, "j", 3, t],
+    [13, "j", 0, t],
+    [14, "j", 1, t],
+    [15, "j", 2, t],
+    [16, "j", 3, t],
+  ]],
+])
