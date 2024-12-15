@@ -58,6 +58,8 @@ class EAVIndex extends Index {
       yield datom
     }
   }
+
+  //todo rdatoms
 }
 
 class AEVIndex extends Index {
