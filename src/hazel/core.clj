@@ -120,8 +120,8 @@
                                  {:i i
                                   :j j}))
           _      (storage/store db)]
-      (-> memory deref (get 0) (select-keys [:eavt :aevt :avet]))
-      (prn @memory)))
+      #_(-> memory deref (get 0) (select-keys [:eavt :aevt :avet]))
+      (spit "ij.json" (json/write-value-as-string @memory))))
 
 
 
