@@ -124,6 +124,23 @@
       (spit "ij.json" (json/write-value-as-string @memory))))
 
 
+  (di/with-open [[storage memory] (di/start [`storage `memory `db-indices])]
+    (let [schema {:i {:db/index true}
+                  :j {:db/index true}}
+          db     (d/empty-db schema {:branching-factor 4
+                                     :storage          storage})
+          db     (d/db-with db (for [i (range 4)
+                                     j (range 4)]
+                                 {:i i
+                                  :j j}))
+          _      (storage/store db)]
+
+
+      (spit "avet.json" (json/write-value-as-string
+                         (map (juxt :e :a :v)
+                              (d/datoms db :avet))))))
+
+
 
   ,,,)
 
