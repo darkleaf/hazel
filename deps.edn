@@ -1,12 +1,13 @@
 {:paths ["src" "resources"]
- :deps  {persistent-sorted-set/persistent-sorted-set {:mvn/version "0.3.0"}
-         org.clojure/clojure                         {:mvn/version "1.12.0"}
-         org.clojars.darkleaf/di                     {:mvn/version "3.2.1"}
-         ring/ring-core                              {:mvn/version "1.13.0"}
-         ring/ring-jetty-adapter                     {:mvn/version "1.13.0"}
-         metosin/reitit-core                         {:mvn/version "0.7.2"}
-         metosin/reitit-ring                         {:mvn/version "0.7.2"}
-         metosin/ring-http-response                  {:mvn/version "0.9.4"}
-         metosin/jsonista                            {:mvn/version "0.3.12"}
-         io.github.borkdude/html                     {:mvn/version "0.1.1"}
-         com.github.javafaker/javafaker              {:mvn/version "1.0.2"}}}
+ :deps  {#_#_persistent-sorted-set/persistent-sorted-set {:mvn/version "0.3.0"}
+         datascript/datascript                           {:mvn/version "1.7.3"}
+         org.clojure/clojure                             {:mvn/version "1.12.0"}
+         org.clojars.darkleaf/di                         {:mvn/version "3.2.1"}
+         ring/ring-core                                  {:mvn/version "1.13.0"}
+         ring/ring-jetty-adapter                         {:mvn/version "1.13.0"}
+         metosin/reitit-core                             {:mvn/version "0.7.2"}
+         metosin/reitit-ring                             {:mvn/version "0.7.2"}
+         metosin/ring-http-response                      {:mvn/version "0.9.4"}
+         metosin/jsonista                                {:mvn/version "0.3.12"}
+         io.github.borkdude/html                         {:mvn/version "0.1.1"}
+         com.github.javafaker/javafaker                  {:mvn/version "1.0.2"}}}

@@ -4,7 +4,9 @@
    [clojure.string :as str]
    [darkleaf.di.core :as di]
    [jsonista.core :as json]
-   [me.tonsky.persistent-sorted-set :as set]
+   #_[me.tonsky.persistent-sorted-set :as set]
+   [datascript.core :as d]
+   [datascript.storage :as storage]
    [reitit.ring]
    [ring.adapter.jetty :as jetty]
    [ring.util.http-response :as ring.resp])
@@ -92,119 +94,49 @@
      [:script {:type :module, :class :mocha-exec}
       [:$ "mocha.run();"]]]}))
 
-(defn db
+(defn memory
   {::di/kind :component}
   []
   (atom {}))
 
-(def branching-factor 16) ;; for tests
-
-(defn settings
-  {::di/kind :component}
-  [{branching-factor `branching-factor}]
-  (Settings. branching-factor))
-
-(defn sorted-set
-  [{^Settings settings `settings
-    storage            `storage}
-   ^Comparator cmp]
-  (PersistentSortedSet. {#_meta} cmp storage settings))
-
 (defn storage
   {::di/kind :component}
-  [{db                 `db
-    ^Settings settings `settings}]
-  (reify IStorage
-    (store [_ node]
-      (let [address (str (random-uuid))]
-        (swap! db assoc address
-               (json/write-value-as-string
-                {:type      (if (instance? Branch node) ;; for js
-                              :branch
-                              :leaf)
-                 :level     (.level node)
-                 :keys      (.keys node)
-                 :addresses (when (instance? Branch node)
-                              (.addresses ^Branch node))}))
-        address))
-    (restore [_ address]
-      (let [blob (get @db address)
-
-            {:strs [level
-                    ^java.util.List keys
-                    ^java.util.List addresses]}
-            (json/read-value blob)]
-
-        (if addresses
-          (Branch. (int level) ^java.util.List keys ^java.util.List addresses settings)
-          (Leaf. keys settings))))))
+  [{memory `memory}]
+  (reify datascript.storage/IStorage
+    (-store [_ addr+data-seq]
+      (doseq [[addr data] addr+data-seq]
+        (swap! memory assoc addr data)))))
 
 
 (comment
-  (di/with-open [[sorted-set db] (di/start [`sorted-set `db])]
-    (let [s  (sorted-set compare)
-          s' (into s (range 100))]
-      (set/store s')
-      @db))
+  ;; если не пользоваться transact! то он не пишет tail
+  (di/with-open [[storage memory] (di/start [`storage `memory `db-indices])]
+    (let [schema {:i {:db/index true}
+                  :j {:db/index true}}
+          db     (d/empty-db schema {:branching-factor 4
+                                     :storage          storage})
+          db     (d/db-with db (for [i (range 4)
+                                     j (range 4)]
+                                 {:i i
+                                  :j j}))
+          _      (storage/store db)]
+      (-> memory deref (get 0) (select-keys [:eavt :aevt :avet]))
+      (prn @memory)))
+
+
 
   ,,,)
 
-(def e 0)
-(def a 1)
-(def v 2)
-
-(defn eav [x y]
-  (cond
-    (> (x e) (y e)) 1
-    (< (x e) (y e)) -1
-    (> (x a) (y a)) 1
-    (< (x a) (y a)) -1
-    (> (x v) (y v)) 1
-    (< (x v) (y v)) -1
-    :else 0))
-
-(defn aev [x y]
-  (cond
-    (> (x a) (y a)) 1
-    (< (x a) (y a)) -1
-    (> (x e) (y e)) 1
-    (< (x e) (y e)) -1
-    (> (x v) (y v)) 1
-    (< (x v) (y v)) -1
-    :else 0))
-
-(defn ave [x y]
-  (cond
-    (> (x a) (y a)) 1
-    (< (x a) (y a)) -1
-    (> (x v) (y v)) 1
-    (< (x v) (y v)) -1
-    (> (x e) (y e)) 1
-    (< (x e) (y e)) -1
-    :else 0))
-
-(defn read-index [idx]
-  (into {}
-        (for [[k v] idx]
-          [k (json/read-value v)])))
-
-(comment
-  (di/with-open [[sorted-set db] (di/start [`sorted-set `db]
-                                           {`branching-factor 4})]
-    (let [f      (Faker.)
-          datoms (mapcat
-                  (fn [i]
-                    [[i "task/title"    (.. f chuckNorris fact)
-                      i "task/assignee" (.. f name fullName)]])
-                  (range 20))
-          eavi   (sorted-set eav)
-          eavi   (into eavi datoms)]
-      (set/store eavi)
-      (read-index @db)))
+;; transact! не перестраивает дерево, если мало датом,
+;; и это по идее хорошо
+;; еще storage/store почему-то возвращает базу, а не новый корень
+;; особые адреса:
+;; 0 - это номер базы
+;; 1 - это хвост, который не проиндексировали
 
 
-  ;; todo: transact! fn)
-  ,,,)
+
+
 
 
 
