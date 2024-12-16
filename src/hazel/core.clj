@@ -33,14 +33,11 @@
 (def route-data
   (di/template
    [["/" (di/ref `root)]
-    ["/tests" (di/ref `tests)]
     ["/assets/*" (di/ref `resources)]]))
 
 (defn layout [& [{:keys [title
-                         importmap
                          head
                          body]
-                  :or   {importmap {}}
                   :as x}]]
   #html
   [:<>
@@ -50,8 +47,7 @@
      [:meta {:charset :UTF-8}]
      [:title title]
      [:meta {:name :viewport, :content "width=device-width, initial-scale=1.0"}]
-     [:script {:type :importmap}
-      [:$ (json/write-value-as-string importmap)]]
+
      head]
     [:body body]]])
 
@@ -61,38 +57,11 @@
       (ring.resp/ok)
       (ring.resp/content-type "text/html")))
 
-
 (defn root [_ _req]
-  (html-ok :title "Орешник"))
-
-(defn tests [_ _req]
-  (html-ok
-   {:title "Tests"
-
-    :importmap
-    {:imports {"hazel/" "./assets/"
-               "chai"   "https://cdn.jsdelivr.net/npm/chai/+esm"}}
-
-    :head
-    #html
-    [:<>
-     [:link {:rel :stylesheet, :href "https://unpkg.com/mocha/mocha.css"}]]
-
-    :body
-    #html
-    [:<>
-     [:div {:id "mocha"}]
-     [:script {:src "https://unpkg.com/mocha/mocha.js"}]
-
-     [:script {:type :module, :class :mocha-init}
-      [:$ "mocha.setup('bdd');
-           mocha.checkLeaks();"]]
-
-     [:script {:type :module}
-      [:$ "import 'hazel/sum.test.js'"]]
-
-     [:script {:type :module, :class :mocha-exec}
-      [:$ "mocha.run();"]]]}))
+  (html-ok :title "Орешник"
+           :body #html [:<>
+                        [:div {:id "app"}]
+                        [:script {:src "/assets/build/entrypoint.js"}]]))
 
 (defn memory
   {::di/kind :component}

@@ -1,15 +1,16 @@
-# hazel
+# Орешник
 
-To install dependencies:
 
-```bash
-bun install
+
+## Bun
+
+```
+bun run test
+
+bun run build
 ```
 
-To run:
+Билдер в бетте,
+если использовать `build.js`, то он релоадит сам конфиг, но не файлы.
 
-```bash
-bun run index.js
-```
-
-This project was created using `bun init` in bun v1.1.38. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+И manifest.json не умеет пока генерировать.

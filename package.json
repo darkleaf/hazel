@@ -1,10 +1,14 @@
 {
-  "name": "hazel",
-  "module": "index.js",
-  "type": "module",
-  "devDependencies": {
+  "scripts": {
+    "test": "bun test --watch",
+    "build": "bun build --watch --outdir ./resources/public/build ./js/entrypoint.js"
   },
-  "peerDependencies": {
-
+  "name": "hazel",
+  "type": "module",
+  "devDependencies": {},
+  "peerDependencies": {},
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }
