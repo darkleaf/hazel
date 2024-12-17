@@ -12,11 +12,25 @@ import {Stack} from "immutable"
 import DB from "./DB.js"
 
 
+// вроде как только в https, но на localhost работает
+const cacheStorage = await window.caches.open('segments');
 
 async function loaderImpl(address) {
-  const resp = await fetch("/segment/" + address)
-  const json = await resp.json()
-  return json
+  const url = "/segment/" + address;
+  const resp = await (async function(){
+
+    const cached = await cacheStorage.match(url);
+    if (cached !== undefined) {
+      return cached;
+    } else {
+      await cacheStorage.add(url);
+      // можно тут сделать "recur", но тогда есть шанс бесконечного цикла
+      return await cacheStorage.match(url);
+    }
+  })();
+
+  const json = await resp.json();
+  return json;
 }
 
 const cache = new Map()
