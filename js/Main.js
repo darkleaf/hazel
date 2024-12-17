@@ -1,5 +1,12 @@
 import { memo, useState, useEffect } from "react"
 
+
+function delay(ms) {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, ms)
+  });
+}
+
 import {Stack} from "immutable"
 
 import DB from "./DB.js"
@@ -38,7 +45,7 @@ function EntityImpl({e, db}) {
 
 
   return <div>
-    id: {entity.id} i: {entity.i} j: {entity.j} {new Date().toString()}
+    id: {entity.id} i: {entity.i} j: {entity.j}
   </div>
 }
 
@@ -58,22 +65,27 @@ const Entity = memo(EntityImpl, (x, y) => {
 
 const Entity = EntityImpl;
 
+/*
+const Entity = function({e}) {
+  return <div>{JSON.stringify(e)}</div>
+}
+*/
+
 export default function Main() {
-  const [i, inc] = useState(0);
+  const [attr, setAttr] = useState("i");
 
   const [db, setDb] = useState(new DB(window.initialRoots, loader))
 
   const [entities, setEntities] = useState(Stack())
 
 
-
-  // походу тут нужно использовать memo, чтобы  <Entity не нужно было ререндерить
+  /*
   useEffect(() => {
     let stopped = false;
     (async function load() {
-      for await (const datom of db.aev.datoms("i")) {
+      for await (let i = 1; i < 1600; i++ ) {
         if (stopped) break
-        setEntities(entities => entities.push(datom))
+        setEntities(entities => entities.push([i, "i", 42]))
       }
     })();
     return () => {
@@ -81,6 +93,25 @@ export default function Main() {
       setEntities(Stack())
     };
   }, [i])
+  */
+
+
+  useEffect(() => {
+    let stopped = false;
+    (async function load() {
+      for await (const datom of db.ave.datoms(attr)) {
+        if (stopped) break
+
+        //await delay(1000);
+
+        setEntities(entities => entities.push(datom))
+      }
+    })();
+    return () => {
+      stopped = true
+      setEntities(Stack())
+    };
+  }, [attr])
 
 
 
@@ -98,7 +129,10 @@ export default function Main() {
 
 
   return <>
-    <div onClick={() => {inc(a => a + 1)}}>inc {i}</div>
+    <div>attr: {attr}</div>
+    <div onClick={() => {setAttr("i")}}>by i</div>
+    <div onClick={() => {setAttr("j")}}>by j</div>
+
     <div>{entities.map((e, i) => {
       return <Entity key={e[0]} db={db} e={e} />
     })}</div>

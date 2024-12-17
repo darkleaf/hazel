@@ -20,8 +20,14 @@
 (set! *warn-on-reflection* true)
 
 
+
+
+
 (comment
-  (def system (di/start `jetty (di/add-side-dependency `init)))
+  (def system (di/start `jetty
+                        (di/add-side-dependency `init)
+                        {:number 10
+                         :branching-factor 64}))
   (di/stop system)
 
 
@@ -66,13 +72,15 @@
 
 (defn init
   {::di/kind :component}
-  [{storage `storage}]
+  [{storage          `storage
+    number           :number
+    branching-factor :branching-factor}]
   (let [schema {:i {:db/index true}
                 :j {:db/index true}}
-        db     (d/empty-db schema {#_#_:branching-factor 4
+        db     (d/empty-db schema {:branching-factor branching-factor
                                    :storage          storage})
-        db     (d/db-with db (for [i (range 40)
-                                   j (range 40)]
+        db     (d/db-with db (for [i (range number)
+                                   j (range number)]
                                {:i i
                                 :j j}))
         _      (storage/store db)]
