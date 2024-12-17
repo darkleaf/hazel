@@ -19,8 +19,9 @@
 
 (set! *warn-on-reflection* true)
 
+
 (comment
-  (def system (di/start `jetty))
+  (def system (di/start `jetty (di/add-side-dependency `init)))
   (di/stop system)
 
 
@@ -33,35 +34,9 @@
 (def route-data
   (di/template
    [["/" (di/ref `root)]
+    ["/segment/:id" (di/ref `segment)]
     ["/assets/*" (di/ref `resources)]]))
 
-(defn layout [& [{:keys [title
-                         head
-                         body]
-                  :as x}]]
-  #html
-  [:<>
-   [:$ "<!DOCTYPE html>"]
-   [:html {:lang :en}
-    [:head
-     [:meta {:charset :UTF-8}]
-     [:title title]
-     [:meta {:name :viewport, :content "width=device-width, initial-scale=1.0"}]
-
-     head]
-    [:body body]]])
-
-(defn html-ok [& opts]
-  (-> (layout opts)
-      (str)
-      (ring.resp/ok)
-      (ring.resp/content-type "text/html")))
-
-(defn root [_ _req]
-  (html-ok :title "Орешник"
-           :body #html [:<>
-                        [:div {:id "app"}]
-                        [:script {:src "/assets/build/entrypoint.js"}]]))
 
 (defn memory
   {::di/kind :component}
@@ -77,9 +52,35 @@
         (swap! memory assoc addr data)))))
 
 
+(defn segment [{memory `memory} req]
+  (let [id   (-> req :path-params :id parse-long)
+        data (-> memory
+                 deref
+                 (get id)
+                 json/write-value-as-string)]
+    (-> data
+        (ring.resp/ok)
+        (ring.resp/header "Content-type" "application/json")
+        (ring.resp/header "Cache-control" "public, max-age=604800, immutable"))))
+
+
+(defn init
+  {::di/kind :component}
+  [{storage `storage}]
+  (let [schema {:i {:db/index true}
+                :j {:db/index true}}
+        db     (d/empty-db schema {#_#_:branching-factor 4
+                                   :storage          storage})
+        db     (d/db-with db (for [i (range 40)
+                                   j (range 40)]
+                               {:i i
+                                :j j}))
+        _      (storage/store db)]
+    :ok))
+
 (comment
   ;; если не пользоваться transact! то он не пишет tail
-  (di/with-open [[storage memory] (di/start [`storage `memory `db-indices])]
+  (di/with-open [[storage memory] (di/start [`storage `memory])]
     (let [schema {:i {:db/index true}
                   :j {:db/index true}}
           db     (d/empty-db schema {:branching-factor 4
@@ -93,7 +94,7 @@
       (spit "ij.json" (json/write-value-as-string @memory))))
 
 
-  (di/with-open [[storage memory] (di/start [`storage `memory `db-indices])]
+  (di/with-open [[storage memory] (di/start [`storage `memory])]
     (let [schema {:i {:db/index true}
                   :j {:db/index true}}
           db     (d/empty-db schema {:branching-factor 4
@@ -212,3 +213,44 @@
   (jetty/run-jetty handler
                    {:join? false
                     :port 8080}))
+
+
+(defn layout [& [{:keys [title
+                         head
+                         body]
+                  :as x}]]
+  #html
+  [:<>
+   [:$ "<!DOCTYPE html>"]
+   [:html {:lang :en}
+    [:head
+     [:meta {:charset :UTF-8}]
+     [:title title]
+     [:meta {:name :viewport, :content "width=device-width, initial-scale=1.0"}]
+
+     head]
+    [:body body]]])
+
+(defn html-ok [& opts]
+  (-> (layout opts)
+      (str)
+      (ring.resp/ok)
+      (ring.resp/content-type "text/html")))
+
+(defn root [{memory `memory} _req]
+  (html-ok :title "Орешник"
+           :body #html [:<>
+                        [:div {:id "app"}]
+                        [:script
+                         [:$ (str
+                              "window.initialRoots = "
+                              (let [{:keys [eavt aevt avet]}
+                                    (get @memory 0)]
+                                (-> {:eav eavt
+                                     :aev aevt
+                                     :ave avet}
+                                    (json/write-value-as-string))))]]
+
+
+                        [:script {:src "/assets/build/entrypoint.js"
+                                  :type :module}]]))
