@@ -23,6 +23,7 @@ async function loaderImpl(address) {
     if (cached !== undefined) {
       return cached;
     } else {
+      // надо рассмотреть еще код ответа и вот это все
       await cacheStorage.add(url);
       // можно тут сделать "recur", но тогда есть шанс бесконечного цикла
       return await cacheStorage.match(url);
