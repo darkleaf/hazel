@@ -9,7 +9,7 @@ function delay(ms) {
 
 import {Stack} from "immutable"
 
-import DB from "./DB.js"
+import DB from "./db/DB.js"
 
 
 // вроде как только в https, но на localhost работает
