@@ -1,15 +1,18 @@
 {
   "scripts": {
     "test": "bun test --watch",
-    "build": "bun build --watch --sourcemap --outdir ./resources/public/build ./js/entrypoint.js"
+    "build": "bun build --watch --sourcemap --outdir ./resources/public/build --public-path /assets/build/ ./js/entrypoint.jsx"
   },
   "name": "hazel",
   "type": "module",
   "devDependencies": {},
   "peerDependencies": {},
   "dependencies": {
+    "classnames": "^2.5.1",
     "immutable": "^5.0.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "todomvc-app-css": "^2.4.3",
+    "todomvc-common": "^1.0.5"
   }
 }
