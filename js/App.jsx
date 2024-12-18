@@ -3,6 +3,7 @@ import TodomvcCommon from "todomvc-common/base.css";
 import AppCss from "./app.css";
 
 import Header from './components/Header.jsx';
+import Main from './components/Main.jsx';
 import Footer from './components/Footer.jsx';
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
 
       <div className="todoapp">
         <Header />
+        <Main />
         <Footer />
       </div>
     </>)
