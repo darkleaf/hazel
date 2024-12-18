@@ -1,6 +1,14 @@
 import classnames from "classnames";
 
-export default function Item({ todo, dispatch, index }) {
+export default function Item({ todo, dispatch }) {
+  const title = "aaa";
+  const isWritable = false;
+  const completed = false;
+
+  const toggleItem = () => {};
+  const handleDoubleClick = () => {};
+  const removeItem = () => {};
+
   return (
     <li className={classnames({ completed: todo.completed })} data-testid="todo-item">
       <div className="view">

@@ -14,9 +14,9 @@ export default function App() {
       <link rel="stylesheet" precedence="medium" href={AppCss} />
 
       <div className="todoapp">
-        <Header />
+        {/* <Header /> */}
         <Main />
-        <Footer />
+        {/* <Footer /> */}
       </div>
     </>)
 }

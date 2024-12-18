@@ -4,7 +4,10 @@ import classnames from "classnames";
 // import { TOGGLE_ALL } from "../constants";
 
 export default function Main({ todos, dispatch }) {
-  const visibleTodos = []
+  const visibleTodos = [{
+    completed: false,
+  }]
+
 
   const toggleAll = () => {};
 
