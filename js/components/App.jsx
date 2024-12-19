@@ -53,7 +53,8 @@ export default function App() {
 
       <div className="todoapp">
         <Header transact={doTransact} />
-        <Main db={db} />
+        <Main db={db}
+              transact={doTransact} />
         {/* <Footer /> */}
       </div>
     </>)

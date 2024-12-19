@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Item from "./Item";
 import classnames from "classnames";
 
-export default function Main({ db }) {
+export default function Main({ db, transact }) {
   const [todos, setTodos] = useState([]);
 
   useEffect(() => {
@@ -28,21 +28,32 @@ export default function Main({ db }) {
     };
   }, [db]);
 
-  const toggleAll = () => {};
+  const toggleAll = (e) => {
+    transact(todos.map(todo => ({
+      "db/id": todo.id,
+      completed: e.target.checked,
+    })));
+  };
 
   return (
     <main className="main" data-testid="main">
-      {/*visibleTodos.length > 0 ? (
+      {todos.length > 0 && (
         <div className="toggle-all-container">
-          <input className="toggle-all" type="checkbox" id="toggle-all" data-testid="toggle-all" checked={visibleTodos.every((todo) => todo.completed)} onChange={toggleAll} />
-          <label className="toggle-all-label" htmlFor="toggle-all">
+          <input className="toggle-all"
+                 type="checkbox"
+                 id="toggle-all"
+                 data-testid="toggle-all"
+                 checked={todos.every(todo => todo.completed)}
+                 onChange={toggleAll} />
+          <label className="toggle-all-label"
+                 htmlFor="toggle-all">
             Toggle All Input
           </label>
         </div>
-      ) : null*/}
+      )}
       <ul className="todo-list" data-testid="todo-list">
         {todos.map(todo => (
-          <Item todo={todo} key={todo.id} />
+          <Item todo={todo} key={todo.id} transact={transact} />
         ))}
       </ul>
     </main>

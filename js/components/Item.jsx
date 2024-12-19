@@ -1,12 +1,16 @@
 import classnames from "classnames";
 
-export default function Item({ todo, dispatch }) {
+export default function Item({ todo, transact }) {
   const {title, completed} = todo;
   const isWritable = false;
 
   const toggleItem = () => {};
   const handleDoubleClick = () => {};
-  const removeItem = () => {};
+  const removeItem = () => {
+    transact([
+      ["db.fn/retractEntity", todo.id],
+    ])
+  };
 
   return (
     <li className={classnames({ completed })} data-testid="todo-item">

@@ -76,13 +76,21 @@
         (ring.resp/header "Content-type" "application/json")
         (ring.resp/header "Cache-control" "public, max-age=604800, immutable"))))
 
+(defn fix-tx-data [tx-data]
+  (for [i tx-data]
+    (if (vector? i)
+      ;; "db/retract" -> :db/retract
+      (update i 0 keyword)
+      i)))
+
 ;; d/transact! пишет tail, что нам не нужно
 (defn transact! [{conn `conn} tx-data]
   (locking conn
-    (let [db @conn
-          db (d/db-with db tx-data)
-          _  (storage/store db)
-          _  (reset! conn db)]
+    (let [tx-data (fix-tx-data tx-data)
+          db      @conn
+          db      (d/db-with db tx-data)
+          _       (storage/store db)
+          _       (reset! conn db)]
       db)))
 
 (defn roots [{memory `memory}]
