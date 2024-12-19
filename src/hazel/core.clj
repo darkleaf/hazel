@@ -19,14 +19,10 @@
 
 (set! *warn-on-reflection* true)
 
-
-
-
-
 (comment
   (def system (di/start `jetty
                         (di/add-side-dependency `init)
-                        {:number 40
+                        {:number           3
                          :branching-factor 64}))
   (di/stop system)
 
@@ -40,6 +36,7 @@
 (def route-data
   (di/template
    [["/" (di/ref `root)]
+    ["/transact" (di/ref `transact)]
     ["/segment/:id" (di/ref `segment)]
     ["/assets/*" (di/ref `resources)]]))
 
@@ -57,6 +54,16 @@
       (doseq [[addr data] addr+data-seq]
         (swap! memory assoc addr data)))))
 
+(defn conn
+  {::di/kind :component}
+  [{storage          `storage
+    branching-factor :branching-factor}]
+  (let [schema {:completed {:db/index true}}
+        db     (d/empty-db schema
+                           {:branching-factor branching-factor
+                            :storage          storage})]
+    (atom db)))
+
 
 (defn segment [{memory `memory} req]
   (let [id   (-> req :path-params :id parse-long)
@@ -69,21 +76,48 @@
         (ring.resp/header "Content-type" "application/json")
         (ring.resp/header "Cache-control" "public, max-age=604800, immutable"))))
 
+;; d/transact! пишет tail, что нам не нужно
+(defn transact! [{conn `conn} tx-data]
+  (locking conn
+    (let [db @conn
+          db (d/db-with db tx-data)
+          _  (storage/store db)
+          _  (reset! conn db)]
+      db)))
+
+(defn roots [{memory `memory}]
+  (let [{:keys [eavt aevt avet]}
+        (get @memory 0)]
+    (-> {:eav eavt
+         :aev aevt
+         :ave avet})))
+
+
+(defn transact [{transact! `transact!
+                 roots     `roots} req]
+  (locking roots
+    (let [tx-data (-> req
+                      :body
+                      (json/read-value json/keyword-keys-object-mapper))
+          db      (transact! tx-data)])
+    (-> (roots)
+        (json/write-value-as-string)
+        (ring.resp/ok)
+        (ring.resp/header "Content-type" "application/json"))))
 
 (defn init
   {::di/kind :component}
-  [{storage          `storage
-    number           :number
-    branching-factor :branching-factor}]
-  (let [schema {:completed {:db/index true}}
-        db     (d/empty-db schema {:branching-factor branching-factor
-                                   :storage          storage})
-        f      (Faker.)
-        db     (d/db-with db (for [_ (range number)]
-                               {:title     (.. f food ingredient)
-                                :completed (.. f bool bool)}))
-        _      (storage/store db)]
-    :ok))
+  [{conn   `conn
+    number :number}]
+  (locking conn
+    (let [f  (Faker.)
+          db @conn
+          db (d/db-with db (for [_ (range number)]
+                             {:title     (.. f food ingredient)
+                              :completed (.. f bool bool)}))
+          _  (storage/store db)]
+      (reset! conn db)
+      :ok)))
 
 (comment
   ;; если не пользоваться transact! то он не пишет tail
@@ -127,66 +161,6 @@
 ;; особые адреса:
 ;; 0 - это номер базы
 ;; 1 - это хвост, который не проиндексировали
-
-
-
-
-
-
-
-#_
-(defn handler [_ req]
-
-  (prn :req)
-
-  {:status 200
-   :body "ok"}
-
-  #_
-  (let [address (uri->address (:uri req))
-        node    (@*storage address)]
-    (if (some? node)
-      {:status 200
-       :body   node
-       :headers {"Content-type" "application/json"
-                 "Access-Control-Allow-Origin" "*"
-                 "Cache-control" "public, max-age=604800, immutable"}}
-      {:status 404})))
-
-
-
-
-
-
-
-
-
-
-
-;; (defn- uri->address [s]
-;;   (subs s 1 (count s)))
-
-
-;; (defn handler [req]
-
-;;   (prn :req)
-
-;;   (let [address (uri->address (:uri req))
-;;         node    (@*storage address)]
-;;     (if (some? node)
-;;       {:status 200
-;;        :body   node
-;;        :headers {"Content-type" "application/json"
-;;                  "Access-Control-Allow-Origin" "*"
-;;                  "Cache-control" "public, max-age=604800, immutable"}}
-;;       {:status 404})))
-
-
-;; (def server (jetty/run-jetty #'handler
-;;                              {:join? false
-;;                               :port 8080}))
-
-;; (.stop server)
 
 
 
@@ -244,20 +218,15 @@
       (ring.resp/ok)
       (ring.resp/content-type "text/html")))
 
-(defn root [{memory `memory} _req]
+(defn root [{memory `memory
+             roots  `roots} _req]
   (html-ok :title "Орешник"
            :body #html [:<>
                         [:div {:id "app"}]
                         [:script
                          [:$ (str
                               "window.initialRoots = "
-                              (let [{:keys [eavt aevt avet]}
-                                    (get @memory 0)]
-                                (-> {:eav eavt
-                                     :aev aevt
-                                     :ave avet}
-                                    (json/write-value-as-string))))]]
-
-
-                        [:script {:src "/assets/build/entrypoint.js"
+                              (-> (roots)
+                                  (json/write-value-as-string)))]]
+                        [:script {:src  "/assets/build/entrypoint.js"
                                   :type :module}]]))

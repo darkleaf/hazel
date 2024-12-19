@@ -85,7 +85,9 @@ class AVEIndex extends Index {
 }
 
 export default class DB {
+  #loader;
   constructor(roots, loader) {
+    this.#loader = loader;
     this.eav = new EAVIndex(roots.eav, loader, eav)
     this.aev = new AEVIndex(roots.aev, loader, aev)
     this.ave = new AVEIndex(roots.ave, loader, ave)
@@ -95,7 +97,7 @@ export default class DB {
   // }
 
   update(roots) {
-    return new DB(roots, this.loader);
+    return new DB(roots, this.#loader);
   }
 }
 
