@@ -10,20 +10,9 @@ import Footer from './Footer.jsx';
 
 import DB from "../db/DB.js";
 
-async function loaderImpl(address) {
-  const url = "/segment/" + address;
-  const resp = await fetch(url);
-  const json = await resp.json();
-  return json;
-}
+import { loader, wrapInMemoryCache } from '../loader.js';
 
-const cache = new Map()
-async function loader(address) {
-  if (cache.has(address)) return await cache.get(address);
-  const promise = loaderImpl(address);
-  cache.set(address, promise);
-  return await promise;
-}
+const myLoader = wrapInMemoryCache(loader);
 
 async function transact(txData) {
   const resp = await fetch("/transact", {
@@ -35,9 +24,8 @@ async function transact(txData) {
   return roots;
 }
 
-
 export default function App() {
-  const [db, setDb] = useState(new DB(window.initialRoots, loader));
+  const [db, setDb] = useState(new DB(window.initialRoots, myLoader));
 
   // useCallback? IDGAF!
   const doTransact = async function(txData) {
