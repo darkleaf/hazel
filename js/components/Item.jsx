@@ -1,16 +1,15 @@
 import classnames from "classnames";
 
 export default function Item({ todo, dispatch }) {
-  const title = "aaa";
+  const {title, completed} = todo;
   const isWritable = false;
-  const completed = false;
 
   const toggleItem = () => {};
   const handleDoubleClick = () => {};
   const removeItem = () => {};
 
   return (
-    <li className={classnames({ completed: todo.completed })} data-testid="todo-item">
+    <li className={classnames({ completed })} data-testid="todo-item">
       <div className="view">
         {isWritable ? (
           <Input onSubmit={handleUpdate} label="Edit Todo Input" defaultValue={title} onBlur={handleBlur} />
