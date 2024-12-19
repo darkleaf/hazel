@@ -75,13 +75,13 @@
   [{storage          `storage
     number           :number
     branching-factor :branching-factor}]
-  (let [schema {:task/completed {:db/index true}}
+  (let [schema {:completed {:db/index true}}
         db     (d/empty-db schema {:branching-factor branching-factor
                                    :storage          storage})
         f      (Faker.)
         db     (d/db-with db (for [_ (range number)]
-                               {:task/title     (.. f chuckNorris fact)
-                                :task/completed (.. f bool)}))
+                               {:title     (.. f food ingredient)
+                                :completed (.. f bool bool)}))
         _      (storage/store db)]
     :ok))
 

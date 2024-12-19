@@ -1,20 +1,30 @@
+import { useState, useEffect } from "react";
+
 import Item from "./Item";
 import classnames from "classnames";
 
-// import { TOGGLE_ALL } from "../constants";
+export default function Main({ db }) {
+  const [todos, setTodos] = useState([]);
 
-export default function Main({ todos, dispatch }) {
-  const visibleTodos = [
-    {
-      completed: false,
-      title: "123",
-    },
-    {
-      completed: true,
-      title: "321",
-    },
-  ]
+  useEffect(() => {
+    const index = db.ave.datoms("completed");
+    (async function() {
+      for await (const datom of index) {
+        const todo = {
+          id: datom[0],
+        };
+        for await (const [_, a, v] of db.eav.datoms(todo.id)) {
+          todo[a] = v;
+        }
+        setTodos(todos => [...todos, todo]);
+      }
+    })();
 
+    return () => {
+      index.return();
+      setTodos([]);
+    };
+  }, [db]);
 
   const toggleAll = () => {};
 
@@ -29,7 +39,7 @@ export default function Main({ todos, dispatch }) {
         </div>
       ) : null*/}
       <ul className="todo-list" data-testid="todo-list">
-        {visibleTodos.map(todo => (
+        {todos.map(todo => (
           <Item todo={todo} key={todo.id} />
         ))}
       </ul>

@@ -93,6 +93,10 @@ export default class DB {
 
   // rdatoms(index, c1, c2, c3) {
   // }
+
+  update(roots) {
+    return new DB(roots, this.loader);
+  }
 }
 
 
