@@ -4,7 +4,12 @@ export default function Item({ todo, transact }) {
   const {title, completed} = todo;
   const isWritable = false;
 
-  const toggleItem = () => {};
+  const toggleItem = () => {
+    transact([{
+      "db/id": todo.id,
+      completed: !todo.completed,
+    }])
+  };
   const handleDoubleClick = () => {};
   const removeItem = () => {
     transact([
