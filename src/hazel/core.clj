@@ -26,7 +26,7 @@
 (comment
   (def system (di/start `jetty
                         (di/add-side-dependency `init)
-                        {:number 10
+                        {:number 40
                          :branching-factor 64}))
   (di/stop system)
 
@@ -75,14 +75,13 @@
   [{storage          `storage
     number           :number
     branching-factor :branching-factor}]
-  (let [schema {:i {:db/index true}
-                :j {:db/index true}}
+  (let [schema {:task/completed {:db/index true}}
         db     (d/empty-db schema {:branching-factor branching-factor
                                    :storage          storage})
-        db     (d/db-with db (for [i (range number)
-                                   j (range number)]
-                               {:i i
-                                :j j}))
+        f      (Faker.)
+        db     (d/db-with db (for [_ (range number)]
+                               {:task/title     (.. f chuckNorris fact)
+                                :task/completed (.. f bool)}))
         _      (storage/store db)]
     :ok))
 
