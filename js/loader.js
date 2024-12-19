@@ -24,13 +24,17 @@ export async function wrapStorageCache(loader) {
   return async function(address) {
     const cached = await cache.match(address);
     if (cached !== undefined) {
-      return await cached.json();
+      const j = await cached.json();
+      console.log("cached:", j);
+      return j
     } else {
       const data = await loader(address);
       const resp = Response.json(data);
       await cache.put(address, resp);
       const resp2 = await cache.match(address);
-      return await resp2.json();
+      const j = await resp2.json();
+      console.log("now cached:", j);
+      return j
     }
   }
 }
