@@ -1,40 +1,28 @@
 import classnames from "classnames";
 
-// import { REMOVE_COMPLETED_ITEMS } from "../constants";
-
-export default function Footer(/*{ todos, dispatch }*/) {
-  const todos = []
-  const activeTodos = []
-  const route = "/"
-
-  const removeCompleted = () => {}
-
-  // if (todos.length === 0)
-  //   return null;
-
+export default function Footer({ filter, setFilter }) {
   return (
     <footer className="footer" data-testid="footer">
-      <span className="todo-count">{`${activeTodos.length} ${activeTodos.length === 1 ? "item" : "items"} left!`}</span>
       <ul className="filters" data-testid="footer-navigation">
         <li>
-          <a className={classnames({ selected: route === "/" })} href="#/">
+          <a className={classnames({ selected: filter === "all" })}
+             onClick={() => setFilter('all')}>
             All
           </a>
         </li>
         <li>
-          <a className={classnames({ selected: route === "/active" })} href="#/active">
+          <a className={classnames({ selected: filter === "active" })}
+             onClick={() => setFilter('active')}>
             Active
           </a>
         </li>
         <li>
-          <a className={classnames({ selected: route === "/completed" })} href="#/completed">
+          <a className={classnames({ selected: filter === "completed" })}
+             onClick={() => setFilter('completed')}>
             Completed
           </a>
         </li>
       </ul>
-      <button className="clear-completed" disabled={activeTodos.length === todos.length} onClick={removeCompleted}>
-        Clear completed
-      </button>
     </footer>
   );
 }

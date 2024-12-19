@@ -3,13 +3,22 @@ import { useState, useEffect } from "react";
 import Item from "./Item";
 import classnames from "classnames";
 
-export default function Main({ db, transact }) {
+export default function Main({ db, filter, transact }) {
   const [todos, setTodos] = useState([]);
 
   useEffect(() => {
     let stopped = false;
     (async function() {
-      for await (const datom of db.ave.datoms("completed")) {
+      for await (const datom of db.ave.datoms(
+        "completed",
+        (function() {
+          switch(filter) {
+          case 'active': return false;
+          case 'completed': return true;
+          default: return;
+          }
+        })()
+      )) {
         const todo = {
           id: datom[0],
         };
@@ -26,7 +35,7 @@ export default function Main({ db, transact }) {
       stopped = true;
       setTodos([]);
     };
-  }, [db]);
+  }, [db, filter]);
 
   const toggleAll = (e) => {
     transact(todos.map(todo => ({

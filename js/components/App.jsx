@@ -30,6 +30,7 @@ async function transact(txData) {
 
 export default function App() {
   const [db, setDb] = useState(new DB(window.initialRoots, myLoader));
+  const [filter, setFilter] = useState('active');
 
   // useCallback? IDGAF!
   const doTransact = async function(txData) {
@@ -46,8 +47,10 @@ export default function App() {
       <div className="todoapp">
         <Header transact={doTransact} />
         <Main db={db}
+              filter={filter}
               transact={doTransact} />
-        {/* <Footer /> */}
+        <Footer filter={filter}
+                setFilter={setFilter} />
       </div>
     </>)
 }
