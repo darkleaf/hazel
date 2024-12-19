@@ -10,11 +10,19 @@ import Footer from './Footer.jsx';
 
 import DB from "../db/DB.js";
 
-async function loader(address) {
+async function loaderImpl(address) {
   const url = "/segment/" + address;
   const resp = await fetch(url);
   const json = await resp.json();
   return json;
+}
+
+const cache = new Map()
+async function loader(address) {
+  if (cache.has(address)) return await cache.get(address);
+  const promise = loaderImpl(address);
+  cache.set(address, promise);
+  return await promise;
 }
 
 async function transact(txData) {
