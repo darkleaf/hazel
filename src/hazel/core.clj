@@ -64,12 +64,19 @@
                             :storage          storage})]
     (atom db)))
 
+(defn remove-t [node]
+  (-> node
+      (update :keys (fn [k]
+                      (map (fn [[e a v _t]]
+                             [e a v])
+                           k)))))
 
 (defn segment [{memory `memory} req]
   (let [id   (-> req :path-params :id parse-long)
         data (-> memory
                  deref
                  (get id)
+                 remove-t
                  json/write-value-as-string)]
     (-> data
         (ring.resp/ok)
