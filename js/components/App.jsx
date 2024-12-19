@@ -10,9 +10,13 @@ import Footer from './Footer.jsx';
 
 import DB from "../db/DB.js";
 
-import { loader, wrapInMemoryCache } from '../loader.js';
+import { loader, wrapInMemoryCache, wrapStorageCache } from '../loader.js';
 
-const myLoader = wrapInMemoryCache(loader);
+const myLoader = wrapInMemoryCache(
+  await wrapStorageCache(
+    loader
+  )
+);
 
 async function transact(txData) {
   const resp = await fetch("/transact", {
