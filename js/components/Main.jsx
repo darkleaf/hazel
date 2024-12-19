@@ -7,21 +7,23 @@ export default function Main({ db }) {
   const [todos, setTodos] = useState([]);
 
   useEffect(() => {
-    const index = db.ave.datoms("completed");
+    let stopped = false;
     (async function() {
-      for await (const datom of index) {
+      for await (const datom of db.ave.datoms("completed")) {
         const todo = {
           id: datom[0],
         };
         for await (const [_, a, v] of db.eav.datoms(todo.id)) {
           todo[a] = v;
         }
+        if(stopped) break;
+
         setTodos(todos => [...todos, todo]);
       }
     })();
 
     return () => {
-      index.return();
+      stopped = true;
       setTodos([]);
     };
   }, [db]);
