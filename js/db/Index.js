@@ -37,58 +37,16 @@ export default class Index {
     loader,
     comparator,
     address,
-    added = [],
-    retracted = [],
   ) {
     // todo: private?
     this.loader = loader
     this.comparator = comparator
     this.address = address
-    this.added = [...added].sort(this.comparator)
-    this.retracted = [...retracted].sort(this.comparator)
   }
-
-
-  // надо хвост реализовывать
-  // через генераторы
-  //
-  // удаленные можно
-
-
-  /*
-
-    https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
-    компаратор можно
-
-
-    типа хранить датом с предыдущего шага
-    или undefined?
-
-    найти в хвосте 2 индекса
-    предыдущий и текущий
-    и вставить что нашли в поток
-
-    как-то так
-
-
-    тест надо писать
-
-    */
-
-
-
-  // https://immutable-js.com/docs/v5.0.3/OrderedSet/#sort()
-  // Set(...).sort(cmp)
-  // какое-то херовое api
-
-
-  // просто массив отсортировать, и искать слева по комбинатору все меньше заданного
-
-
 
   // fix name
   // я тут постоянно длину спрашиваю, это ок?
-  async *seekTree(addr, from) {
+  async *seekImpl(addr, from) {
     const node = await this.loader(addr)
 
     let idx = 0
@@ -98,73 +56,12 @@ export default class Index {
     if (!!node.addresses) { // branch
       for(; idx < node.addresses.length; idx++) {
         const addr = node.addresses[idx]
-        yield* this.seekTree(addr, from)
+        yield* this.seekImpl(addr, from)
       }
     } else {
       for(; idx < node.keys.length; idx++) {
         yield node.keys[idx]
       }
-    }
-  }
-
-  // по идее по нему нужно тоже итерироваться в seekImpl
-  isRetracted(datom) {
-    return -1 !== this.retracted.findIndex(item => {
-      return 0 === this.comparator(datom, item)
-    })
-  }
-
-  async *seekImpl(addr, from) {
-    const tree = this.seekTree(addr, from);
-    const added = this.added.values();
-
-    let treeI = await tree.next();
-    let addedI = added.next();
-
-    while(!addedI.done && (this.comparator(addedI.value, from) < 0)) {
-      addedI = added.next();
-    }
-
-    while(!treeI.done && !addedI.done) {
-      const cmp = this.comparator(addedI.value, treeI.value);
-
-      if (cmp < 0) {
-        yield addedI.value;
-        addedI = added.next();
-      } else if (cmp > 0) {
-        if (this.isRetracted(treeI.value)) {
-          treeI = await tree.next();
-          continue;
-        }
-        yield treeI.value;
-        treeI = await tree.next();
-      } else {
-        // if (this.isRetracted(treeI.value)) {
-        //   treeI = await tree.next();
-        //   addedI = added.next();
-        //   continue;
-        // }
-        yield treeI.value;
-      }
-    }
-
-    // todo: deleted too
-    while(!treeI.done) {
-      if (this.isRetracted(treeI.value)) {
-        treeI = await tree.next();
-        continue;
-      }
-      yield treeI.value;
-      treeI = await tree.next();
-    }
-
-    while(!addedI.done) {
-      // if (this.isRetracted(added.value)) {
-      //   addedI = added.next();
-      //   continue;
-      // }
-      yield addedI.value;
-      addedI = added.next();
     }
   }
 

@@ -33,7 +33,7 @@ function cmp(a, b) {
   return a - b
 }
 
-const set = new Index(loader, cmp, root,)
+const set = new Index(loader, cmp, root)
 
 describe("seek", () => {
   test("no args", async () => {
@@ -80,20 +80,5 @@ describe("rseek", () => {
     expect(
       await Array.fromAsync(set.rseek(1))
     ).toEqual([]);
-  });
-});
-
-const setTail = new Index(
-  loader, cmp, root,
-  [1, 3, 3.5, 7],
-  [4]
-)
-
-describe("seek with tail", () => {
-  test("no args", async () => {
-    expect(
-      await Array.fromAsync(setTail.seek())
-    ).toEqual([1, 2, 3, 3.5,    6, 7]);
-    //        [   2,         4, 6]
   });
 });
