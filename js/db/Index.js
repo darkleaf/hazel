@@ -34,16 +34,52 @@ function searchLast(keys, key, cmp) {
 
 export default class Index {
   constructor(
-    address,
     loader,
     comparator,
-
+    address,
   ) {
     // todo: private?
-    this.address = address
     this.loader = loader
     this.comparator = comparator
+    this.address = address
   }
+
+
+  // надо хвост реализовывать
+  // через генераторы
+  //
+  // удаленные можно
+
+
+  /*
+
+    https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
+    компаратор можно
+
+
+    типа хранить датом с предыдущего шага
+    или undefined?
+
+    найти в хвосте 2 индекса
+    предыдущий и текущий
+    и вставить что нашли в поток
+
+    как-то так
+
+
+    тест надо писать
+
+    */
+
+
+
+  // https://immutable-js.com/docs/v5.0.3/OrderedSet/#sort()
+  // Set(...).sort(cmp)
+  // какое-то херовое api
+
+
+  // просто массив отсортировать, и искать слева по комбинатору все меньше заданного
+
 
 
   // fix name

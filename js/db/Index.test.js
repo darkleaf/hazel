@@ -33,7 +33,7 @@ function cmp(a, b) {
   return a - b
 }
 
-const set = new Index(root, loader, cmp)
+const set = new Index(loader, cmp, root,)
 
 describe("seek", () => {
   test("no args", async () => {
