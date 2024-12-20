@@ -1,3 +1,5 @@
+import PatchedIndex from './PatchedIndex';
+
 // asm.js
 // int: x|0
 function searchFirst(keys, key, cmp) {
@@ -91,5 +93,9 @@ export default class Index {
 
   rseek(from) {
     return this.rseekImpl(this.address, from)
+  }
+
+  patch(patch, op) {
+    return new PatchedIndex(this, patch, op);
   }
 }

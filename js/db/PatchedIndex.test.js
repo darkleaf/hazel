@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import PatchedIndex from './PatchedIndex';
+import Index from './Index';
 
 const root = "1"
 const db = {
@@ -47,7 +47,7 @@ function op(key) {
   return patchAndOps.get(key);
 }
 
-const set = new PatchedIndex(loader, cmp, root, op, patch)
+const set = new Index(loader, cmp, root).patch(patch, op);
 
 describe("seek", () => {
   test("no args", async () => {

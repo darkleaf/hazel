@@ -1,26 +1,24 @@
-import Index from './Index';
-
-export default class PatchedIndex extends Index {
-  constructor(loader, comparator, address, op, patch) {
-    super(loader, comparator, address);
-    this.op = op;
+export default class PatchedIndex {
+  constructor(index, patch, op) {
+    this.index = index;
     this.patch = patch;
+    this.op = op;
   }
 
   async *seek(from) {
-    const tree = super.seek(from);
+    const tree = this.index.seek(from);
     const patch = this.patch.values();
 
     let treeI  = await tree.next();
     let patchI = patch.next();
 
     // seek(from)
-    while(!patchI.done && (this.comparator(patchI.value, from) < 0)) {
+    while(!patchI.done && (this.index.comparator(patchI.value, from) < 0)) {
       patchI = patch.next();
     }
 
     while(!treeI.done && !patchI.done) {
-      const cmp = this.comparator(treeI.value, patchI.value);
+      const cmp = this.index.comparator(treeI.value, patchI.value);
 
       if (cmp < 0) {
         yield treeI.value;
