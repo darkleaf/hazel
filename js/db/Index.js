@@ -121,6 +121,10 @@ export default class Index {
     let treeI = await tree.next();
     let addedI = added.next();
 
+    while(!addedI.done && (this.comparator(addedI.value, from) < 0)) {
+      addedI = added.next();
+    }
+
     while(!treeI.done && !addedI.done) {
       const cmp = this.comparator(addedI.value, treeI.value);
 
@@ -135,19 +139,30 @@ export default class Index {
         yield treeI.value;
         treeI = await tree.next();
       } else {
-        if (this.isRetracted(treeI.value)) {
-          treeI = await tree.next();
-          addedI = added.next();
-          continue;
-        }
+        // if (this.isRetracted(treeI.value)) {
+        //   treeI = await tree.next();
+        //   addedI = added.next();
+        //   continue;
+        // }
         yield treeI.value;
       }
     }
+
+    // todo: deleted too
     while(!treeI.done) {
+      if (this.isRetracted(treeI.value)) {
+        treeI = await tree.next();
+        continue;
+      }
       yield treeI.value;
       treeI = await tree.next();
     }
+
     while(!addedI.done) {
+      // if (this.isRetracted(added.value)) {
+      //   addedI = added.next();
+      //   continue;
+      // }
       yield addedI.value;
       addedI = added.next();
     }

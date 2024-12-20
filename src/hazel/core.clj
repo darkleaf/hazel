@@ -22,8 +22,8 @@
 (comment
   (def system (di/start `jetty
                         (di/add-side-dependency `init)
-                        {:number           3
-                         :branching-factor 64}))
+                        {:number           256
+                         :branching-factor 8}))
   (di/stop system)
 
 
@@ -52,23 +52,30 @@
   (reify datascript.storage/IStorage
     (-store [_ addr+data-seq]
       (doseq [[addr data] addr+data-seq]
-        (swap! memory assoc addr data)))))
+        (swap! memory assoc addr data)))
+    (-restore [_ addr]
+
+      (prn addr)
+
+      (get @memory addr))))
 
 (defn conn
   {::di/kind :component}
   [{storage          `storage
     branching-factor :branching-factor}]
   (let [schema {:completed {:db/index true}}
-        db     (d/empty-db schema
-                           {:branching-factor branching-factor
-                            :storage          storage})]
-    (atom db)))
+        opts   {:branching-factor branching-factor
+                :storage          storage}]
+    (d/create-conn schema opts)))
+
+(defn remove-t-from-datom [[e a v _t]]
+  [e a v])
+
 
 (defn remove-t [node]
   (-> node
       (update :keys (fn [k]
-                      (map (fn [[e a v _t]]
-                             [e a v])
+                      (map remove-t-from-datom
                            k)))))
 
 (defn segment [{memory `memory} req]
@@ -81,7 +88,7 @@
     (-> data
         (ring.resp/ok)
         (ring.resp/header "Content-type" "application/json")
-        (ring.resp/header "Cache-control" "public, max-age=604800, immutable"))))
+        #_(ring.resp/header "Cache-control" "public, max-age=604800, immutable"))))
 
 (defn fix-tx-data [tx-data]
   (for [i tx-data]
@@ -90,49 +97,47 @@
       (update i 0 keyword)
       i)))
 
-;; d/transact! пишет tail, что нам не нужно
-(defn transact! [{conn `conn} tx-data]
-  (locking conn
-    (let [tx-data (fix-tx-data tx-data)
-          db      @conn
-          db      (d/db-with db tx-data)
-          _       (storage/store db)
-          _       (reset! conn db)]
-      db)))
+(defn parse-tail [node]
+  [(for [tx node
+         [_ _ _ t :as d] tx
+         :when (pos? t)]
+     (remove-t-from-datom d))
+   (for [tx node
+         [_ _ _ t :as d] tx
+         :when (neg? t)]
+     (remove-t-from-datom d))])
 
 (defn roots [{memory `memory}]
-  (let [{:keys [eavt aevt avet]}
-        (get @memory 0)]
-    (-> {:eav eavt
-         :aev aevt
-         :ave avet})))
+  (let [{:keys [eavt aevt avet]} (get @memory 0)
+        tail                     (get @memory 1)
+        [added retracted]        (parse-tail tail)]
+    (-> {:eav       eavt
+         :aev       aevt
+         :ave       avet
+         :added     added
+         :retracted retracted})))
 
 
-(defn transact [{transact! `transact!
-                 roots     `roots} req]
-  (locking roots
-    (let [tx-data (-> req
-                      :body
-                      (json/read-value json/keyword-keys-object-mapper))
-          db      (transact! tx-data)])
-    (-> (roots)
-        (json/write-value-as-string)
-        (ring.resp/ok)
-        (ring.resp/header "Content-type" "application/json"))))
+(defn transact [{conn  `conn
+                 roots `roots} req]
+  (let [tx-data (-> req
+                    :body
+                    (json/read-value json/keyword-keys-object-mapper))
+        db      (d/transact! conn tx-data)])
+  (-> (roots)
+      (json/write-value-as-string)
+      (ring.resp/ok)
+      (ring.resp/header "Content-type" "application/json")))
 
 (defn init
   {::di/kind :component}
   [{conn   `conn
     number :number}]
-  (locking conn
-    (let [f  (Faker.)
-          db @conn
-          db (d/db-with db (for [_ (range number)]
-                             {:title     (.. f food ingredient)
-                              :completed (.. f bool bool)}))
-          _  (storage/store db)]
-      (reset! conn db)
-      :ok)))
+  (let [f  (Faker.)
+        db (d/transact! conn (for [_ (range number)]
+                               {:title     (.. f food ingredient)
+                                :completed (.. f bool bool)}))]
+    :ok))
 
 (comment
   ;; если не пользоваться transact! то он не пишет tail

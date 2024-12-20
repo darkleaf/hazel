@@ -88,9 +88,9 @@ export default class DB {
   #loader;
   constructor(roots, loader) {
     this.#loader = loader;
-    this.eav = new EAVIndex(loader, eav, roots.eav,)
-    this.aev = new AEVIndex(loader, aev, roots.aev,)
-    this.ave = new AVEIndex(loader, ave, roots.ave,)
+    this.eav = new EAVIndex(loader, eav, roots.eav, roots.added, roots.retracted);
+    this.aev = new AEVIndex(loader, aev, roots.aev, roots.added, roots.retracted);
+    this.ave = new AVEIndex(loader, ave, roots.ave, roots.added, roots.retracted);
   }
 
   // rdatoms(index, c1, c2, c3) {
