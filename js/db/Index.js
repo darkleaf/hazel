@@ -128,14 +128,19 @@ export default class Index {
         yield addedI.value;
         addedI = added.next();
       } else if (cmp > 0) {
-        if (this.isRetracted(treeI.value)) continue;
+        if (this.isRetracted(treeI.value)) {
+          treeI = await tree.next();
+          continue;
+        }
         yield treeI.value;
         treeI = await tree.next();
       } else {
-        if (this.isRetracted(treeI.value)) continue;
+        if (this.isRetracted(treeI.value)) {
+          treeI = await tree.next();
+          addedI = added.next();
+          continue;
+        }
         yield treeI.value;
-        treeI = await tree.next();
-        addedI = added.next();
       }
     }
     while(!treeI.done) {
