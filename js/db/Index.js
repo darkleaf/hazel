@@ -37,11 +37,15 @@ export default class Index {
     loader,
     comparator,
     address,
+    added = [],
+    retracted = [],
   ) {
     // todo: private?
     this.loader = loader
     this.comparator = comparator
     this.address = address
+    this.added = [...added].sort(this.comparator)
+    this.retracted = [...retracted].sort(this.comparator)
   }
 
 
@@ -84,7 +88,7 @@ export default class Index {
 
   // fix name
   // я тут постоянно длину спрашиваю, это ок?
-  async *seekImpl(addr, from) {
+  async *seekTree(addr, from) {
     const node = await this.loader(addr)
 
     let idx = 0
@@ -94,12 +98,53 @@ export default class Index {
     if (!!node.addresses) { // branch
       for(; idx < node.addresses.length; idx++) {
         const addr = node.addresses[idx]
-        yield* this.seekImpl(addr, from)
+        yield* this.seekTree(addr, from)
       }
     } else {
       for(; idx < node.keys.length; idx++) {
         yield node.keys[idx]
       }
+    }
+  }
+
+  // по идее по нему нужно тоже итерироваться в seekImpl
+  isRetracted(datom) {
+    return -1 !== this.retracted.findIndex(item => {
+      return 0 === this.comparator(datom, item)
+    })
+  }
+
+  async *seekImpl(addr, from) {
+    const tree = this.seekTree(addr, from);
+    const added = this.added.values();
+
+    let treeI = await tree.next();
+    let addedI = added.next();
+
+    while(!treeI.done && !addedI.done) {
+      const cmp = this.comparator(addedI.value, treeI.value);
+
+      if (cmp < 0) {
+        yield addedI.value;
+        addedI = added.next();
+      } else if (cmp > 0) {
+        if (this.isRetracted(treeI.value)) continue;
+        yield treeI.value;
+        treeI = await tree.next();
+      } else {
+        if (this.isRetracted(treeI.value)) continue;
+        yield treeI.value;
+        treeI = await tree.next();
+        addedI = added.next();
+      }
+    }
+    while(!treeI.done) {
+      yield treeI.value;
+      treeI = await tree.next();
+    }
+    while(!addedI.done) {
+      yield addedI.value;
+      addedI = added.next();
     }
   }
 
