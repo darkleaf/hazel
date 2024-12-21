@@ -9,35 +9,27 @@ const op = 3;
 
 const comparators = {
   eav(x, y) {
-    let res = function(){
-      // хуй знает, как это работает, но пусть пока будет закомменчено
-      //if (y[e] === undefined) return 1
-      if (x[e] > y[e]) return 1
-      if (x[e] < y[e]) return -1
-      //if (y[a] === undefined) return 1
-      if (x[a] > y[a]) return 1
-      if (x[a] < y[a]) return -1
-      //if (y[v] === undefined) return 1
-      if (x[v] > y[v]) return 1
-      if (x[v] < y[v]) return -1
-      return 0
-    }()
-
-    //console.log("eav", x, y, res)
-    return res;
+    // хуй знает, как это работает, но пусть пока будет закомменчено
+    //if (y[e] === undefined) return 1
+    if (x[e] > y[e]) return 1
+    if (x[e] < y[e]) return -1
+    //if (y[a] === undefined) return 1
+    if (x[a] > y[a]) return 1
+    if (x[a] < y[a]) return -1
+    //if (y[v] === undefined) return 1
+    if (x[v] > y[v]) return 1
+    if (x[v] < y[v]) return -1
+    return 0
   },
 
   aev(x, y) {
-    let res = function(){
-      if (x[a] > y[a]) return 1
-      if (x[a] < y[a]) return -1
-      if (x[e] > y[e]) return 1
-      if (x[e] < y[e]) return -1
-      if (x[v] > y[v]) return 1
-      if (x[v] < y[v]) return -1
-      return 0
-    }()
-    return res
+    if (x[a] > y[a]) return 1
+    if (x[a] < y[a]) return -1
+    if (x[e] > y[e]) return 1
+    if (x[e] < y[e]) return -1
+    if (x[v] > y[v]) return 1
+    if (x[v] < y[v]) return -1
+    return 0
   },
 
   ave(x, y) {
