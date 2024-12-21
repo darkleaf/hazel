@@ -1,6 +1,7 @@
 (ns hazel.core
   (:require
    borkdude.html
+   [clojure.math :as math]
    [clojure.string :as str]
    [darkleaf.di.core :as di]
    [jsonista.core :as json]
@@ -23,7 +24,7 @@
   (def system (di/start `jetty
                         (di/add-side-dependency `init)
                         {:number           256
-                         :branching-factor 8}))
+                         :branching-factor 64}))
   (di/stop system)
 
 
@@ -97,10 +98,39 @@
       (update i 0 keyword)
       i)))
 
+#_"правильная медленная реализация"
+#_
 (defn parse-tail [node]
   (for [tx node]
     (for [[e a v t] tx]
       [e a v (pos? t)])))
+
+
+#_
+(defn parse-tail [node]
+  [(into []
+         (for [tx node
+                [e a v t] tx]
+            [e a v (pos? t)]))])
+
+#_"ну такое, но вроде работает
+идея в том, чтобы 'схлопнуть' все транзакции в одну"
+(defn parse-tail [node]
+  (let [all (for [tx node
+                  d  tx]
+              d)
+        gs  (group-by (fn [[e a v t]]
+                        [e a v])
+                      all)]
+    [(for [[[e a v] g] gs
+           :let        [n (->> g
+                               (map #(nth % 3))
+                               (map math/signum)
+                               (reduce +))
+                        op (pos? n)]
+           :when (not= 0.0 n)]
+       [e a v op])]))
+
 
 (defn roots [{memory `memory}]
   (let [{:keys [eavt aevt avet]} (get @memory 0)
