@@ -37,6 +37,43 @@ export default function Main({ db, filter, transact }) {
     };
   }, [db, filter]);
 
+  /*
+  useEffect(() => {
+    let stopped = false;
+    (async function() {
+      const res = [];
+      for await (const datom of db.ave.datoms(
+        "completed",
+        (function() {
+          switch(filter) {
+          case 'active': return false;
+          case 'completed': return true;
+          default: return;
+          }
+        })()
+      )) {
+        const todo = {
+          id: datom[0],
+        };
+        for await (const [_, a, v] of db.eav.datoms(todo.id)) {
+          todo[a] = v;
+        }
+        if(stopped) break;
+
+        res.push(todo);
+        //setTodos(todos => [...todos, todo]);
+      }
+
+      setTodos(res);
+    })();
+
+    return () => {
+      stopped = true;
+      setTodos([]);
+    };
+  }, [db, filter]);
+  */
+
   const toggleAll = (e) => {
     transact(todos.map(todo => ({
       "db/id": todo.id,
