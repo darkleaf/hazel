@@ -1,3 +1,24 @@
+import {searchFirst, searchLast} from './utils';
+
+class ArrayTree {
+  #array;
+  #comparator;
+
+  constructor(array, comparator) {
+    this.#array = [...array].sort(comparator);
+    this.#comparator = comparator;
+  }
+
+  *seek(from) {
+    let idx = 0;
+    if (from !== undefined)
+      idx = searchFirst(this.#array, from, this.#comparator);
+    for(; idx < this.#array.length; idx++) {
+      yield this.#array[idx];
+    }
+  }
+}
+
 export default class PatchedTree {
   #tree;
   #comparator;
@@ -6,21 +27,16 @@ export default class PatchedTree {
   constructor(tree, comparator, patch, op) {
     this.#tree       = tree;
     this.#comparator = comparator;
-    this.#patch      = [...patch].sort(comparator);
+    this.#patch      = new ArrayTree(patch, comparator);
     this.#op         = op;
   }
 
   async *seek(from) {
     const tree  = this.#tree.seek(from);
-    const patch = this.#patch.values();
+    const patch = this.#patch.seek(from);
 
     let treeI  = await tree.next();
     let patchI = patch.next();
-
-    // seek(from)
-    while(!patchI.done && (this.#comparator(patchI.value, from) < 0)) {
-      patchI = patch.next();
-    }
 
     while(!treeI.done && !patchI.done) {
       const cmp = this.#comparator(treeI.value, patchI.value);

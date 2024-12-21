@@ -114,6 +114,9 @@ function getOp(d) {
 import Tree from "./Tree.js";
 import PatchedTree from "./PatchedTree.js";
 
+// как-то оно заметно подтормаживает с ростом tail
+// нужно подумать, может быть не композицию использовать, а как-то иначе?
+
 function tree(loader, roots, name) {
   const addr = roots[name];
   const cmp  = comparators[name];
