@@ -98,31 +98,26 @@
       i)))
 
 (defn parse-tail [node]
-  [(for [tx node
-         [_ _ _ t :as d] tx
-         :when (pos? t)]
-     (remove-t-from-datom d))
-   (for [tx node
-         [_ _ _ t :as d] tx
-         :when (neg? t)]
-     (remove-t-from-datom d))])
+  (for [tx node]
+    (for [[e a v t] tx]
+      [e a v (pos? t)])))
 
 (defn roots [{memory `memory}]
   (let [{:keys [eavt aevt avet]} (get @memory 0)
         tail                     (get @memory 1)
-        [added retracted]        (parse-tail tail)]
-    (-> {:eav       eavt
-         :aev       aevt
-         :ave       avet
-         :added     added
-         :retracted retracted})))
+        tail                     (parse-tail tail)]
+    (-> {:eav  eavt
+         :aev  aevt
+         :ave  avet
+         :tail tail})))
 
 
 (defn transact [{conn  `conn
                  roots `roots} req]
   (let [tx-data (-> req
                     :body
-                    (json/read-value json/keyword-keys-object-mapper))
+                    (json/read-value json/keyword-keys-object-mapper)
+                    (fix-tx-data))
         db      (d/transact! conn tx-data)])
   (-> (roots)
       (json/write-value-as-string)
