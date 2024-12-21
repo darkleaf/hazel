@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-import Index from './Index';
+import Tree from './Tree';
+import PatchedTree from './PatchedTree';
 
 const root = "1"
 const db = {
@@ -36,10 +37,10 @@ function cmp(a, b) {
 // числу нельзя приклеить ops,
 // для теста ок
 const patchAndOps = new Map([
+  [4, false],
   [1, true],
   [3, true],
   [3.5, true],
-  [4, false],
   [7, true]
 ]);
 const patch = patchAndOps.keys().toArray();
@@ -47,7 +48,8 @@ function op(key) {
   return patchAndOps.get(key);
 }
 
-const set = new Index(loader, cmp, root).patch(patch, op);
+const baseSet = new Tree(loader, cmp, root);
+const set     = new PatchedTree(baseSet, cmp, patch, op);
 
 describe("seek", () => {
   test("no args", async () => {
