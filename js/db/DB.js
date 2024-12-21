@@ -3,8 +3,6 @@ const a = 1;
 const v = 2;
 const op = 3;
 
-// на t не смотрим пока, да и не нужно на нее смотреть тут
-
 // from всегда идет в y в searchFirst & searchLast
 
 const comparators = {
@@ -59,11 +57,6 @@ class Index {
 
 
 class EAVIndex extends Index {
-
-  // constructor(...args) {
-  //   super(...args);
-  // }
-
   async *datoms(fromE, fromA, fromV) {
     for await (let datom of this.seek([fromE, fromA, fromV])) {
       if (fromE !== undefined && fromE !== datom[e]) break
@@ -112,6 +105,9 @@ import PatchedTree from "./PatchedTree.js";
 // похоже нужно делать "MemoryIndex"
 // и похоже, что нужно хранить всю историю, как datomic, но не datascript,
 // так проще будет, и это будет именно индекс, а не матрешка из PatchedTree
+
+// я там "наоптимизировал" в parse-tree, вроде работает
+
 
 function tree(loader, roots, name) {
   const addr = roots[name];
