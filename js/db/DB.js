@@ -117,6 +117,10 @@ import PatchedTree from "./PatchedTree.js";
 // как-то оно заметно подтормаживает с ростом tail
 // нужно подумать, может быть не композицию использовать, а как-то иначе?
 
+// похоже нужно делать "MemoryIndex"
+// и похоже, что нужно хранить всю историю, как datomic, но не datascript,
+// так проще будет, и это будет именно индекс, а не матрешка из PatchedTree
+
 function tree(loader, roots, name) {
   const addr = roots[name];
   const cmp  = comparators[name];
@@ -125,6 +129,7 @@ function tree(loader, roots, name) {
   let res = new Tree(loader, cmp, addr);
 
   for (const patch of tail) {
+    if (patch.length === 0) continue;
     res = new PatchedTree(res, cmp, patch, getOp);
   }
 
