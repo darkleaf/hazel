@@ -122,7 +122,6 @@ function tree(loader, roots, name) {
   let res = new Tree(loader, cmp, addr);
 
   for (const patch of tail) {
-    console.log(res, patch);
     res = new PatchedTree(res, cmp, patch, getOp);
   }
 
