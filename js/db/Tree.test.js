@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import Index from "./Index.js"
+import Tree from "./Tree.js"
 
 const root = "1"
 const db = {
@@ -33,7 +33,7 @@ function cmp(a, b) {
   return a - b
 }
 
-const set = new Index(loader, cmp, root)
+const set = new Tree(loader, cmp, root)
 
 describe("seek", () => {
   test("no args", async () => {
