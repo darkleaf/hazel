@@ -85,6 +85,8 @@ export default class Tree {
     }
   }
 
+  // можно вызывать просто seek()
+  // хз как это указать
   seek(from) {
     return this.#seek(this.#address, from);
   }
