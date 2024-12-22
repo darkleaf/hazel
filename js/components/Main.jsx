@@ -6,6 +6,10 @@ import classnames from "classnames";
 export default function Main({ db, filter, transact }) {
   const [todos, setTodos] = useState([]);
 
+
+  // что бы оно не моргало, нужно сделать обновление волной
+  // т.е. впереди обновлять, а хвост старый не трогать
+
   useEffect(() => {
     let stopped = false;
     (async function() {
