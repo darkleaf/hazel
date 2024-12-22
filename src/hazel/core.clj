@@ -133,8 +133,9 @@
 
 
 (defn roots [{memory `memory}]
-  (let [{:keys [eavt aevt avet]} (get @memory 0)
-        tail                     (get @memory 1)
+  (let [mem                      @memory
+        {:keys [eavt aevt avet]} (get mem 0)
+        tail                     (get mem 1)
         tail                     (parse-tail tail)]
     (-> {:eav  eavt
          :aev  aevt
