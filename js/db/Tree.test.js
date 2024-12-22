@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import Tree from "./Tree.js"
+import Tree from "./Tree"
 
 const root = "1"
 const db = {

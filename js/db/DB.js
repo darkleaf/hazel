@@ -96,8 +96,8 @@ function getOp(d) {
   return d[op];
 }
 
-import Tree from "./Tree.js";
-import PatchedTree from "./PatchedTree.js";
+import Tree from "./Tree";
+import PatchedTree from "./PatchedTree";
 
 // как-то оно заметно подтормаживает с ростом tail
 // нужно подумать, может быть не композицию использовать, а как-то иначе?

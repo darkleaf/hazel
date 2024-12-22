@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import DB from "./DB.js"
+import DB from "./DB"
 
 /*
   (for [i (range 4)

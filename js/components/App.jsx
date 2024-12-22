@@ -4,11 +4,11 @@ import TodomvcAppCss from "todomvc-app-css/index.css";
 import TodomvcCommon from "todomvc-common/base.css";
 import AppCss from "./app.css";
 
-import Header from './Header.jsx';
-import Main   from './Main.jsx';
-import Footer from './Footer.jsx';
+import Header from './Header';
+import Main   from './Main';
+import Footer from './Footer';
 
-import DB from "../db/DB.js";
+import DB from "../db/DB";
 
 import { loader, wrapInMemoryCache, wrapStorageCache } from '../loader.js';
 
