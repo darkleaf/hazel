@@ -16,13 +16,22 @@
 
 (set! *warn-on-reflection* true)
 
-(comment
+(defn start []
   (def system (di/start `jetty
                         (di/add-side-dependency `init)
                         {:number-of-tasks  16 #_256
-                         :branching-factor 16 #_64}))
-  (di/stop system)
+                         :branching-factor 16 #_64})))
 
+(defn stop []
+  (alter-var-root #'system  di/stop))
+
+(defn restart []
+  (stop)
+  (start)
+  nil)
+
+(comment
+  (restart)
 
   (require '[clojure.repl.deps :as repl.deps])
   (repl.deps/sync-deps)
