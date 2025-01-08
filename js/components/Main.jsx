@@ -6,9 +6,8 @@ import classnames from "classnames";
 export default function Main({ db, filter, transact }) {
   const [todos, setTodos] = useState([]);
 
-
-  // что бы оно не моргало, нужно сделать обновление волной
-  // т.е. впереди обновлять, а хвост старый не трогать
+  // todo: Consider updating in a wave-like fashion.
+  // Keep the old values at the tail while the head and middle maintain the new values.
 
   useEffect(() => {
     let stopped = false;

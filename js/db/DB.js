@@ -3,11 +3,9 @@ const a = 1;
 const v = 2;
 const op = 3;
 
-// from всегда идет в y в searchFirst & searchLast
-
 const comparators = {
   eav(x, y) {
-    // хуй знает, как это работает, но пусть пока будет закомменчено
+    // todo: this is a POC version so it may not be finished
     //if (y[e] === undefined) return 1
     if (x[e] > y[e]) return 1
     if (x[e] < y[e]) return -1
@@ -52,7 +50,7 @@ class Index {
     return this.#tree.seek(from);
   }
 
-  // rseek
+  // todo: implement rseek
 }
 
 
@@ -66,7 +64,7 @@ class EAVIndex extends Index {
     }
   }
 
-  //todo rdatoms
+  //todo: implement rdatoms
 }
 
 class AEVIndex extends Index {

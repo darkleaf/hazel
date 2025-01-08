@@ -1,7 +1,7 @@
 export async function loader(address) {
   const url = "/segment/" + address;
   const resp = await fetch(url);
-  // надо рассмотреть еще код ответа и вот это все
+  // todo: check response code
   const json = await resp.json();
   return json;
 }
@@ -18,7 +18,7 @@ export function wrapInMemoryCache(loader) {
 }
 
 export async function wrapStorageCache(loader) {
-  // вроде как только в https, но на localhost работает
+  // todo: check for HTTPS requirement
   const cache = await window.caches.open('hazel/segments');
 
   return async function(address) {

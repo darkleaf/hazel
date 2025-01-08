@@ -1,8 +1,6 @@
 import Input from "./Input";
 
 export default function Header({ transact }) {
-  //const addItem = useCallback((title) => dispatch({ type: ADD_ITEM, payload: { title } }), [dispatch]);
-
   const addItem = text => {
     transact([{
       title: text,

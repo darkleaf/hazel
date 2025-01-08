@@ -5,16 +5,12 @@
    [clojure.string :as str]
    [darkleaf.di.core :as di]
    [jsonista.core :as json]
-   #_[me.tonsky.persistent-sorted-set :as set]
    [datascript.core :as d]
    [datascript.storage :as storage]
    [reitit.ring]
    [ring.adapter.jetty :as jetty]
    [ring.util.http-response :as ring.resp])
   (:import
-   #_(clojure.lang IDeref)
-   (java.util Comparator)
-   (me.tonsky.persistent_sorted_set PersistentSortedSet IStorage Branch Leaf Settings RefType)
    (org.eclipse.jetty.server Server)
    (com.github.javafaker Faker)))
 
@@ -23,7 +19,7 @@
 (comment
   (def system (di/start `jetty
                         (di/add-side-dependency `init)
-                        {:number           256
+                        {:number-of-tasks  256
                          :branching-factor 64}))
   (di/stop system)
 
@@ -50,7 +46,7 @@
 (defn storage
   {::di/kind :component}
   [{memory `memory}]
-  (reify datascript.storage/IStorage
+  (reify storage/IStorage
     (-store [_ addr+data-seq]
       (doseq [[addr data] addr+data-seq]
         (swap! memory assoc addr data)))
@@ -94,42 +90,36 @@
 (defn fix-tx-data [tx-data]
   (for [i tx-data]
     (if (vector? i)
-      ;; "db/retract" -> :db/retract
+      ;; ["db/retract" ...] -> [:db/retract ...]
       (update i 0 keyword)
       i)))
 
-#_"правильная медленная реализация"
 #_
-(defn parse-tail [node]
+(defn parse-tail
+  "It is correct but inefficient implementation."
+  [node]
   (for [tx node]
     (for [[e a v t] tx]
       [e a v (pos? t)])))
 
-
-#_
-(defn parse-tail [node]
-  [(into []
-         (for [tx node
-                [e a v t] tx]
-            [e a v (pos? t)]))])
-
-#_"ну такое, но вроде работает
-идея в том, чтобы 'схлопнуть' все транзакции в одну"
-(defn parse-tail [node]
-  (let [all (for [tx node
-                  d  tx]
-              d)
-        gs  (group-by (fn [[e a v t]]
-                        [e a v])
-                      all)]
-    [(for [[[e a v] g] gs
-           :let        [n (->> g
-                               (map #(nth % 3))
-                               (map math/signum)
-                               (reduce +))
-                        op (pos? n)]
-           :when (not= 0.0 n)]
-       [e a v op])]))
+(defn parse-tail
+ "Trying to collapse all transactions in one.
+ This code may be incorect. See implementation above."
+ [node]
+ (let [all (for [tx node
+                 d  tx]
+             d)
+       gs  (group-by (fn [[e a v t]]
+                       [e a v])
+                     all)]
+   [(for [[[e a v] g] gs
+          :let        [n (->> g
+                              (map #(nth % 3))
+                              (map math/signum)
+                              (reduce +))
+                       op (pos? n)]
+          :when (not= 0.0 n)]
+      [e a v op])]))
 
 
 (defn roots [{memory `memory}]
@@ -157,60 +147,17 @@
 
 (defn init
   {::di/kind :component}
-  [{conn   `conn
-    number :number}]
+  [{conn            `conn
+    number-of-tasks :number-of-tasks}]
   (let [f  (Faker.)
-        db (d/transact! conn (for [_ (range number)]
+        db (d/transact! conn (for [_ (range number-of-tasks)]
                                {:title     (.. f food ingredient)
                                 :completed (.. f bool bool)}))]
     :ok))
 
-(comment
-  ;; если не пользоваться transact! то он не пишет tail
-  (di/with-open [[storage memory] (di/start [`storage `memory])]
-    (let [schema {:i {:db/index true}
-                  :j {:db/index true}}
-          db     (d/empty-db schema {:branching-factor 4
-                                     :storage          storage})
-          db     (d/db-with db (for [i (range 4)
-                                     j (range 4)]
-                                 {:i i
-                                  :j j}))
-          _      (storage/store db)]
-      #_(-> memory deref (get 0) (select-keys [:eavt :aevt :avet]))
-      (spit "ij.json" (json/write-value-as-string @memory))))
-
-
-  (di/with-open [[storage memory] (di/start [`storage `memory])]
-    (let [schema {:i {:db/index true}
-                  :j {:db/index true}}
-          db     (d/empty-db schema {:branching-factor 4
-                                     :storage          storage})
-          db     (d/db-with db (for [i (range 4)
-                                     j (range 4)]
-                                 {:i i
-                                  :j j}))
-          _      (storage/store db)]
-
-
-      (spit "avet.json" (json/write-value-as-string
-                         (map (juxt :e :a :v)
-                              (d/datoms db :avet))))))
-
-
-
-  ,,,)
-
-;; transact! не перестраивает дерево, если мало датом,
-;; и это по идее хорошо
-;; еще storage/store почему-то возвращает базу, а не новый корень
-;; особые адреса:
-;; 0 - это номер базы
-;; 1 - это хвост, который не проиндексировали
-
-
-
 (defn resources
+  "Bun does not support manifest files.
+  So we can't use cache boost and we have to disable browser caching."
   {::di/kind :component}
   [_]
   (let [h (reitit.ring/create-resource-handler)]
@@ -218,7 +165,6 @@
       (-> req
           h
           (ring.resp/header "Cache-Control" "no-cache")))))
-
 
 (defn handler
   {::di/kind :component}

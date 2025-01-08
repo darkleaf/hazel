@@ -7,20 +7,20 @@ const db = {
   // 2 4 6
   "1": {
     // type: branch
-    level: 1,
+    //level: 1,
     keys: [2, 4, 6],
     addresses: ["2", "3", "4"],
   },
   "2": {
-    level: 0,
+    //level: 0,
     keys: [2],
   },
   "3": {
-    level: 0,
+    //level: 0,
     keys: [4],
   },
   "4": {
-    level: 0,
+    //level: 0,
     keys: [6],
   },
 }

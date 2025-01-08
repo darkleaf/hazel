@@ -11,8 +11,8 @@ export default class Tree {
     this.#address    = address;
   }
 
-  // fix name
-  // я тут постоянно длину спрашиваю, это ок?
+  // todo: should I use something like this?
+  // const len = addresses.length
   async *#seek(addr, from) {
     const node = await this.#loader(addr);
 
@@ -52,8 +52,9 @@ export default class Tree {
     }
   }
 
-  // можно вызывать просто seek()
-  // хз как это указать
+  // todo: should it be like this?
+  // seek(from = undefined) { ... }
+  // we can call it without parameters
   seek(from) {
     return this.#seek(this.#address, from);
   }

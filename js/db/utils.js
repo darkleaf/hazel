@@ -1,4 +1,4 @@
-// asm.js
+// todo: should asm.js hints be used here?
 // int: x|0
 export function searchFirst(keys, key, cmp) {
   let low = 0;
