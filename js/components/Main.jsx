@@ -3,6 +3,14 @@ import { useState, useEffect } from "react";
 import Item from "./Item";
 import classnames from "classnames";
 
+function filterToValue(filter) {
+  switch(filter) {
+  case 'active': return false;
+  case 'completed': return true;
+  default: return;
+  }
+}
+
 export default function Main({ db, filter, transact }) {
   const [todos, setTodos] = useState([]);
 
@@ -13,14 +21,7 @@ export default function Main({ db, filter, transact }) {
     let stopped = false;
     (async function() {
       for await (const datom of db.ave.datoms(
-        "completed",
-        (function() {
-          switch(filter) {
-          case 'active': return false;
-          case 'completed': return true;
-          default: return;
-          }
-        })()
+        "completed", filterToValue(filter)
       )) {
         const todo = {
           id: datom[0],
