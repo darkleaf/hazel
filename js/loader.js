@@ -17,9 +17,10 @@ export function wrapInMemoryCache(loader) {
   }
 }
 
+// todo: check for HTTPS requirement
 export async function wrapStorageCache(loader) {
-  // todo: check for HTTPS requirement
-  const cache = await window.caches.open('hazel/segments');
+  const name = 'hazel/' + window.cache_busting_key + '/segments';
+  const cache = await window.caches.open(name);
 
   return async function(address) {
     const cached = await cache.match(address);

@@ -29,6 +29,11 @@
 
   ,)
 
+(defn cache-busting-key
+  "We should invalidate cache in browser after system reloading."
+  {::di/kind :component}
+  []
+  (random-uuid))
 
 (def route-data
   (di/template
@@ -85,6 +90,8 @@
     (-> data
         (ring.resp/ok)
         (ring.resp/header "Content-type" "application/json")
+        ;; we can do it only in production system
+        ;; or we should use cache boosting
         #_(ring.resp/header "Cache-control" "public, max-age=604800, immutable"))))
 
 (defn fix-tx-data [tx-data]
@@ -210,11 +217,16 @@
       (ring.resp/ok)
       (ring.resp/content-type "text/html")))
 
-(defn root [{memory `memory
-             roots  `roots} _req]
+(defn root [{memory            `memory
+             roots             `roots
+             cache-busting-key `cache-busting-key} _req]
   (html-ok :title "Орешник"
            :body #html [:<>
                         [:div {:id "app"}]
+                        [:script
+                         [:$ (str
+                              "window.cache_busting_key = "
+                              (json/write-value-as-string cache-busting-key))]]
                         [:script
                          [:$ (str
                               "window.initialRoots = "
