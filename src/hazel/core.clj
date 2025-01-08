@@ -19,8 +19,8 @@
 (comment
   (def system (di/start `jetty
                         (di/add-side-dependency `init)
-                        {:number-of-tasks  256
-                         :branching-factor 64}))
+                        {:number-of-tasks  16 #_256
+                         :branching-factor 16 #_64}))
   (di/stop system)
 
 
