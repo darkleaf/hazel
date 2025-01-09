@@ -65,9 +65,6 @@
       (doseq [[addr data] addr+data-seq]
         (swap! memory assoc addr data)))
     (-restore [_ addr]
-
-      (prn addr)
-
       (get @memory addr))))
 
 (defn conn
