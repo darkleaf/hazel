@@ -1,0 +1,47 @@
+* by me
+
+добавить ссылки на код, или дать примеры
+
+1. обход индекса
+2. транзакция
+
+* by Tonsky
+
+#+begin_quote
+Я бы как-то так организовал
+
+# What is it?
+
+Front-end database that syncs storage segments on demand from the server.
+
+- Server-side dabases are usually quite large. It’s not practical to sync the entire DB to the client
+- Local-first DBs have great DX: optimistic updates, transparent background sync
+
+Can we make local-first DB that only mirrors a relevant part of server-side state and fetches new data when required?
+
+This is a proof-of-concept that works on top of DataScript <ссылка>
+
+# How does it work?
+
+... (тут всякие детали реализации, типа b-tree, async generators, browser cache и прочее)
+
+# Limitations
+
+... (we only implement seek and datoms)
+... (что можно прикрутить в будущем и примерно как)
+... (про access control)
+
+# How to run
+
+... (тут объеденить Run и Dev части)
+
+#+end_quote
+
+* by Anton
+
+#+begin_quote
+Для начала этого должно хватить.
+Из пожеланий, можно еще добавить dockerfile для запуска проекта.
+Чтоб не пришлось для того чтобы попробовать его запустить ставить себе bun и clojure.
+Это должно чуть снизить порог входа и уменьшить количество действий для запуска.
+#+end_quote
