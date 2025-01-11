@@ -1,7 +1,8 @@
 {
   "scripts": {
     "test": "bun test --watch",
-    "build": "bun build --watch --sourcemap --outdir ./resources/public/build --public-path /assets/build/ ./js/entrypoint.jsx"
+    "build": "bun build --watch --sourcemap --outdir ./resources/public/build --public-path /assets/build/ ./js/entrypoint.jsx",
+    "build-docker": "bun build --sourcemap --outdir ./resources/public/build --public-path /assets/build/ ./js/entrypoint.jsx"
   },
   "name": "hazel",
   "type": "module",

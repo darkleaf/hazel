@@ -37,10 +37,7 @@ For the lazy sequence abstraction, I chose AsyncGenerators.
 
 # Run
 
-+ Install [Bun](https://bun.sh/) >= v1.1.38
-+ Install Clojure
-+ `bun run build`
-+ run `(hazel.core/start)`
++ `docker build -t hazel . && docker run --rm -p 8080:8080 hazel`
 + open http://localhost:8080
 
 # Thoughts

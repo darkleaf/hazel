@@ -38,6 +38,10 @@
 
   ,)
 
+(defn -main [& args]
+  (let [root (start)]
+    (println "Hazel has been started!")))
+
 (defn cache-busting-key
   "We should invalidate cache in browser after system reloading."
   {::di/kind :component}
