@@ -3,6 +3,10 @@
 This proof of concept (POC) investigates how [Datomic](https://www.datomic.com/) principles can be adapted for the frontend environment.
 It introduces a peer library, written in JavaScript, that is capable of navigating a [DataScript](https://github.com/tonsky/datascript/) database and storing its segments in the browser's cache.
 
+This approach is useful for productivity tools like Asana, Jira, Slack, and Notion,
+especially for applications that work with relatively large databases in the browser.
+It is necessary to make fast queries on that data without access to the backend.
+
 The project is built upon the React TodoMVC framework.
 
 The project's capabilities include:
@@ -42,9 +46,6 @@ For the lazy sequence abstraction, I chose AsyncGenerators.
 
 # Thoughts
 
-This approach is useful for productivity tools like Asana, Jira, Slack, and Notion,
-especially for applications that work with relatively large databases in the browser.
-It is necessary to make fast queries on that data without access to the backend.
 
 It may be possible to adopt this approach for the local-first paradigm.
 For example, we can implement Conflict-free Replicated Data Types (CRDT) by writing database functions in JavaScript and optimistically transacting them on the frontend side.

@@ -14,10 +14,12 @@
 
 Front-end database that syncs storage segments on demand from the server.
 
-- Server-side dabases are usually quite large. It’s not practical to sync the entire DB to the client
+- Server-side dabases are usually quite large.
+  It’s not practical to sync the entire DB to the client
 - Local-first DBs have great DX: optimistic updates, transparent background sync
 
-Can we make local-first DB that only mirrors a relevant part of server-side state and fetches new data when required?
+Can we make local-first DB that only mirrors a relevant part of server-side state
+and fetches new data when required?
 
 This is a proof-of-concept that works on top of DataScript <ссылка>
 
