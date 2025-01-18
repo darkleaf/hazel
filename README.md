@@ -30,7 +30,6 @@ More info you can find in [Datomic Introduction](https://docs.datomic.com/datomi
 DataScript uses a persistent B+ tree sorted set to store the database's indices.
 
 Hazel fetches and caches nodes (segments) of DataScript's trees and lazily iterates over them.
-For the POC, Hazel only supports the methods (r)seek and datoms over indexes.
 
 For the lazy sequence abstraction, I chose AsyncGenerators.
 
@@ -39,16 +38,9 @@ For the lazy sequence abstraction, I chose AsyncGenerators.
 + https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator
 + https://github.com/tonsky/persistent-sorted-set/pull/14
 
-# Run
+# Limitations
 
-+ `docker build -t hazel . && docker run --rm -p 8080:8080 hazel`
-+ open http://localhost:8080
-
-# Thoughts
-
-
-It may be possible to adopt this approach for the local-first paradigm.
-For example, we can implement Conflict-free Replicated Data Types (CRDT) by writing database functions in JavaScript and optimistically transacting them on the frontend side.
+I've only implemented the methods (r)seek and datoms over indexes.
 
 The main drawback I've found is access control.
 For instance, consider an Asana project; it has tasks and collaborators, and each collaborator can read all tasks of the project.
@@ -62,6 +54,22 @@ I have two solutions for this problem:
 + Spreading (replicate) copies of a task across many databases (projects).
 
 If you have any thoughts, feel free to open an issue in this repository.
+
+# Future work
+
+It is possible to implement [datalog](https://docs.datomic.com/query/query-executing.html)
+and other Datomic/DataScript APIs.
+
+It may be possible to adopt this approach for the local-first paradigm.
+For example, we can implement Conflict-free Replicated Data Types (CRDT)
+by writing database functions in JavaScript and optimistically transacting them on the frontend side.
+
+
+# How to run
+
++ `docker build -t hazel . && docker run --rm -p 8080:8080 hazel`
++ open http://localhost:8080
+
 
 # Dev
 
