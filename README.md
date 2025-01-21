@@ -49,7 +49,7 @@ While datoms in **Datomic** and **DataScript** also include an additional elemen
 
 ## Index Implementation and Optimization
 
-The **indexes in DataScript** are implemented as **Persistent Sorted Sets**, a type of immutable data structure based on **B+ trees**. These structures are optimized for storing elements in sorted order and enable efficient operations such as lookups, insertions, and deletions, with a time complexity of $$O(\log n)$$. Functional immutability is achieved through **structural sharing**, ensuring that updates reuse existing data whenever possible. For more details on B+ trees, see the foundational text *[Article]()*.
+The **indexes in DataScript** are implemented as **Persistent Sorted Sets**, a type of immutable data structure based on **B+ trees**. These structures are optimized for storing elements in sorted order and enable efficient operations such as lookups, insertions, and deletions, with a time complexity of $$O(\log n)$$. Functional immutability is achieved through **structural sharing**, ensuring that updates reuse existing data whenever possible. A detailed explanation of B-trees, including their variation B+ trees, can be found in the paper ["The Ubiquitous B-Tree"](https://carlosproal.com/ir/papers/p121-comer.pdf) by Douglas Comer.
 
 Each node of the tree corresponds to a **storage segment**, serialized and stored persistently. **Branch nodes** contain keys and addresses for navigation, while **leaf nodes** store ordered sequences of keys (datoms). 
 
@@ -66,14 +66,14 @@ This reduces the cost of updates significantly, maintaining efficient performanc
 
 DataScript database modifications rely on transactions, which are a central concept for updating indexes. While a comprehensive understanding of the entire transaction process is not required, it’s important to note that transactions are ultimately represented as a collections of **datoms**. Each Datom in transaction includes a flag that indicates whether it will be **added** to or **removed** from the database.
 
-Hazel operates on the frontend by interacting with the **storage segments** of a **[DataScript](https://github.com/tonsky/datascript/) database**, which are generated during transaction processing. It provides an API similar to Datomic's low-level API for interacting with data:
+***Hazel*** operates on the frontend by interacting with the **storage segments** of a **[DataScript](https://github.com/tonsky/datascript/) database**, which are generated during transaction processing. It provides an API similar to Datomic's low-level API for interacting with data:
 
 - `seek-datoms`
 - `datoms`
 
 ## Asynchronous APIs
 
-In both **Clojure(Script)** and **JavaScript**, these methods expose data using idiomatic tools for each ecosystem. In Clojure(Script), the methods return **lazy sequences**, enabling on-demand processing. In JavaScript, the equivalent of lazy sequences is a **Generator** (`function*/yield`). However, since nodes are requested asynchronously over the network, Hazel leverages asynchronous generators (**AsyncGenerator**) to manage this process.
+In both **Clojure(Script)** and **JavaScript**, these APIs expose data expose data using idiomatic tools for each ecosystem. In Clojure(Script), the methods return **lazy sequences**, enabling on-demand processing. In JavaScript, the equivalent of lazy sequences is a **Generator** (`function*/yield`). However, since nodes are requested asynchronously over the network, Hazel leverages asynchronous generators (**AsyncGenerator**) to manage this process.
 
 For example:
 
