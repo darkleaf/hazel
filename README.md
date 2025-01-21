@@ -49,18 +49,20 @@ While datoms in **Datomic** and **DataScript** also include an additional elemen
 
 ## Index Implementation and Optimization
 
-The **indexes in Hazel** are implemented as **Persistent Sorted Sets**, a type of immutable data structure based on **B+ trees**. These structures are optimized for storing elements in sorted order and enable efficient operations such as lookups, insertions, and deletions, with a time complexity of $$O(\log n)$$. Functional immutability is achieved through **structural sharing**, ensuring that updates reuse existing data whenever possible. For more details on B+ trees, see the foundational text *[Article]()*.
+The **indexes in DataScript** are implemented as **Persistent Sorted Sets**, a type of immutable data structure based on **B+ trees**. These structures are optimized for storing elements in sorted order and enable efficient operations such as lookups, insertions, and deletions, with a time complexity of $$O(\log n)$$. Functional immutability is achieved through **structural sharing**, ensuring that updates reuse existing data whenever possible. For more details on B+ trees, see the foundational text *[Article]()*.
 
 Each node of the tree corresponds to a **storage segment**, serialized and stored persistently. **Branch nodes** contain keys and addresses for navigation, while **leaf nodes** store ordered sequences of keys (datoms). 
 
-Since **persistent data structures** can lead to high overhead when updating the entire tree for every transaction, DataScript employs a **tail-based optimization**:
+Since **persistent data structures** can lead to high overhead when updating the entire tree for every transaction, DataScript employs an optimization mechanism that relies on a tail for managing updates:
 
-1. **Uncommitted changes** are accumulated in a "tail."
-2. Once the size of the tail becomes comparable to a tree node, changes are applied to the tree.
+1. Committed datoms are temporarily stored in the "tail".
+2. Once the size of the tail becomes comparable to a tree node, the tail is "flushed" into the tree.
 
-Hazel adopts a similar approach to optimize updates. This reduces the cost of updates significantly, maintaining efficient performance even under frequent modifications.
+This reduces the cost of updates significantly, maintaining efficient performance even under frequent modifications. For implementation details, see the [source code](https://github.com/tonsky/datascript/blob/fa222f7b1b05d4382414022ede011c88f3bad462/src/datascript/conn.cljc#L98).
 
-## Transactions and Asynchronous Operations
+***Hazel*** supports reading the indexes built by DataScript. Additionally, it ensures that data from the "tail" is accessible during queries, providing consistent and efficient data access in the browser.
+
+## Transactions
 
 DataScript database modifications rely on transactions, which are a central concept for updating indexes. While a comprehensive understanding of the entire transaction process is not required, it’s important to note that transactions are ultimately represented as a collections of **datoms**. Each Datom in transaction includes a flag that indicates whether it will be **added** to or **removed** from the database.
 
@@ -69,14 +71,16 @@ Hazel operates on the frontend by interacting with the **storage segments** of a
 - `seek-datoms`
 - `datoms`
 
-### Asynchronous APIs
+## Asynchronous APIs
 
 In both **Clojure(Script)** and **JavaScript**, these methods expose data using idiomatic tools for each ecosystem. In Clojure(Script), the methods return **lazy sequences**, enabling on-demand processing. In JavaScript, the equivalent of lazy sequences is a **Generator** (`function*/yield`). However, since nodes are requested asynchronously over the network, Hazel leverages asynchronous generators (**AsyncGenerator**) to manage this process.
 
 For example:
 
 ```javascript
-db.eav.seek(1, "title", "Do smth");
+for async (const datom of db.eav.seek ....) {
+  ...
+}
 ```
 
 This method is both asynchronous and lazy, fetching tree segments incrementally and enabling efficient iteration. By leveraging asynchronous operations, Hazel can handle large datasets efficiently and stop fetching data when no longer needed.
