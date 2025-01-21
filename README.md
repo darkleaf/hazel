@@ -49,7 +49,7 @@ While datoms in **Datomic** and **DataScript** also include an additional elemen
 
 ## Index Implementation and Optimization
 
-The **indexes in Hazel** are implemented as **Persistent Sorted Sets**, a type of immutable data structure based on **B+ trees**. These structures are optimized for storing elements in sorted order and enable efficient operations such as lookups, insertions, and deletions, with a time complexity of $$O(\log n)$$. Functional immutability is achieved through **structural sharing**, ensuring that updates reuse existing data whenever possible. For more details on B+ trees, see the foundational text *[]()*.
+The **indexes in Hazel** are implemented as **Persistent Sorted Sets**, a type of immutable data structure based on **B+ trees**. These structures are optimized for storing elements in sorted order and enable efficient operations such as lookups, insertions, and deletions, with a time complexity of $$O(\log n)$$. Functional immutability is achieved through **structural sharing**, ensuring that updates reuse existing data whenever possible. For more details on B+ trees, see the foundational text *[Article]()*.
 
 Each node of the tree corresponds to a **storage segment**, serialized and stored persistently. **Branch nodes** contain keys and addresses for navigation, while **leaf nodes** store ordered sequences of keys (datoms). 
 
@@ -85,9 +85,9 @@ This method is both asynchronous and lazy, fetching tree segments incrementally 
 
 A motivated reader can easily grasp these concepts by reviewing the provided tests, which offer clear examples and practical insights. Additional details on persistent B+ trees and storage mechanisms in DataScript can be found in the following references:
 
-- [Persistent Sorted Set Documentation](https://example.com/persistent-sorted-set-docs)
-- [DataScript Storage](https://example.com/datascript-storage-docs)
-- [Datomic Data Model](https://docs.datomic.com/datomic-overview.html)
+- [Persistent Sorted Set Documentation](https://github.com/tonsky/persistent-sorted-set)
+- [DataScript Storage](https://github.com/tonsky/datascript/blob/master/docs/storage.md)
+- [Datomic Data Model](https://docs.datomic.com/whatis/data-model.html#datalog)
 
 # Limitations
 
