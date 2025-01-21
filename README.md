@@ -73,7 +73,7 @@ DataScript database modifications rely on transactions, which are a central conc
 
 ## Asynchronous APIs
 
-In both **Clojure(Script)** and **JavaScript**, these APIs expose data expose data using idiomatic tools for each ecosystem. In Clojure(Script), the methods return **lazy sequences**, enabling on-demand processing. In JavaScript, the equivalent of lazy sequences is a **Generator** (`function*/yield`). However, since nodes are requested asynchronously over the network, Hazel leverages asynchronous generators (**AsyncGenerator**) to manage this process.
+In both **Clojure(Script)** and **JavaScript**, these APIs expose data using idiomatic tools for each ecosystem. In Clojure(Script), the methods return **lazy sequences**, enabling on-demand processing. In JavaScript, the equivalent of lazy sequences is a **Generator** (`function*/yield`). However, since nodes are requested asynchronously over the network, Hazel leverages asynchronous generators (**AsyncGenerator**) to manage this process.
 
 For example:
 
