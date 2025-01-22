@@ -51,16 +51,16 @@ While datoms in **Datomic** and **DataScript** also include an additional elemen
 
 The **indexes in DataScript** are implemented as **Persistent Sorted Sets**, a type of immutable data structure based on **B+ trees**. These structures are optimized for storing elements in sorted order and enable efficient operations such as lookups, insertions, and deletions, with a time complexity of $$O(\log n)$$. Functional immutability is achieved through **structural sharing**, ensuring that updates reuse existing data whenever possible. A detailed explanation of B-trees, including their variation B+ trees, can be found in the paper ["The Ubiquitous B-Tree"](https://carlosproal.com/ir/papers/p121-comer.pdf) by Douglas Comer.
 
-Each node of the tree corresponds to a **storage segment**, serialized and stored persistently. **Branch nodes** contain keys and addresses for navigation, while **leaf nodes** store ordered sequences of keys (datoms). 
+Each node of the tree corresponds to a **storage segment**, serialized and stored persistently. **Branch nodes** contain keys and addresses for navigation, while **leaf nodes** store ordered sequences of keys (datoms).
 
 Since **persistent data structures** can lead to high overhead when updating the entire tree for every transaction, DataScript employs an optimization mechanism that relies on a tail for managing updates:
 
-1. Committed datoms are temporarily stored in the "tail".
+1. Changes are stored in the "tail".
 2. Once the size of the tail becomes comparable to a tree node, the tail is "flushed" into the tree.
 
-This reduces the cost of updates significantly, maintaining efficient performance even under frequent modifications. For implementation details, see the [source code](https://github.com/tonsky/datascript/blob/fa222f7b1b05d4382414022ede011c88f3bad462/src/datascript/conn.cljc#L98).
+For implementation details, see the [source code](https://github.com/tonsky/datascript/blob/fa222f7b1b05d4382414022ede011c88f3bad462/src/datascript/conn.cljc#L98).
 
-***Hazel*** supports reading the indexes built by DataScript. Additionally, it ensures that data from the "tail" is accessible during queries, providing consistent and efficient data access in the browser.
+***Hazel*** supports reading the indexes built by DataScript. In particular, it ensures that data from the "tail" is accessible during queries, providing consistent and efficient data access in the browser.
 
 ## Transactions
 
