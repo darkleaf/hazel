@@ -27,6 +27,19 @@ More info you can find in [Datomic Introduction](https://docs.datomic.com/datomi
 
 # How does it work?
 
+//  Нужно это утверждение на самый верх поставить, что Орешник читает деревья от Датаскрипт.
+
+***Hazel*** supports reading the indexes built by DataScript.
+// и он не supports, а это прямо читалка индексов.
+
+
+***Hazel*** operates on the frontend by interacting with the **storage segments** of a **[DataScript](https://github.com/tonsky/datascript/) database**
+Орешник читает базу данных Датаскрипта.
+Читает ее асинхрнонно, в отличие от Датаскрипта, который имеет синхронное API.
+И кэширует сегменты в браузере.
+
+Далее мы разберем подробности.
+
 You should first be familiar with the **DataScript** or **Datomic** data model. If not, please refer to the following resources:
 
 - [Information Model](https://docs.datomic.com/datomic-overview.html#information-model)
@@ -47,31 +60,83 @@ These elements form the core structure of a Datom. To efficiently organize datom
 
 While datoms in **Datomic** and **DataScript** also include an additional element `T` (Transaction ID), Hazel simplifies the model by excluding this component.
 
-## Index Implementation and Optimization
+## Index Implementation
 
 The **indexes in DataScript** are implemented as **Persistent Sorted Sets**, a type of immutable data structure based on **B+ trees**. These structures are optimized for storing elements in sorted order and enable efficient operations such as lookups, insertions, and deletions, with a time complexity of $$O(\log n)$$. Functional immutability is achieved through **structural sharing**, ensuring that updates reuse existing data whenever possible. A detailed explanation of B-trees, including their variation B+ trees, can be found in the paper ["The Ubiquitous B-Tree"](https://carlosproal.com/ir/papers/p121-comer.pdf) by Douglas Comer.
 
 Each node of the tree corresponds to a **storage segment**, serialized and stored persistently. **Branch nodes** contain keys and addresses for navigation, while **leaf nodes** store ordered sequences of keys (datoms).
 
+## Database Implementation
+
+Для изменений данных DataScript использует транзакции, описанные данными. While a comprehensive understanding of the entire transaction process is not required, it’s important to note that transactions are ultimately represented as a collections of **datoms**. Each Datom in transaction includes a flag that indicates whether it will be **added** to or **removed** from the database.
+
 Since **persistent data structures** can lead to high overhead when updating the entire tree for every transaction, DataScript employs an optimization mechanism that relies on a tail for managing updates:
 
 1. Changes are stored in the "tail".
 2. Once the size of the tail becomes comparable to a tree node, the tail is "flushed" into the tree.
+  For implementation details, see the [source code](https://github.com/tonsky/datascript/blob/fa222f7b1b05d4382414022ede011c88f3bad462/src/datascript/conn.cljc#L98).
 
-For implementation details, see the [source code](https://github.com/tonsky/datascript/blob/fa222f7b1b05d4382414022ede011c88f3bad462/src/datascript/conn.cljc#L98).
+## Hazel's Peer
 
-***Hazel*** supports reading the indexes built by DataScript. In particular, it ensures that data from the "tail" is accessible during queries, providing consistent and efficient data access in the browser.
+В датомике и датаскрипте используются разные API для чтения и изменения данных.
+За чтение данных отвечает Peer libraray, которая позволяет выполнять приложения используя локальный кэш приложения.
 
-## Transactions
+Datomic и DataScript имеют низкоуровневые API для доступа к данным, это
 
-DataScript database modifications rely on transactions, which are a central concept for updating indexes. While a comprehensive understanding of the entire transaction process is not required, it’s important to note that transactions are ultimately represented as a collections of **datoms**. Each Datom in transaction includes a flag that indicates whether it will be **added** to or **removed** from the database.
+- [`seek-datoms` ](https://docs.datomic.com/clojure/index.html#datomic.api/seek-datoms)
+- [`datoms`](https://docs.datomic.com/clojure/index.html#datomic.api/datoms)
 
-***Hazel*** operates on the frontend by interacting with the **storage segments** of a **[DataScript](https://github.com/tonsky/datascript/) database**, which are generated during transaction processing. It provides an API similar to Datomic's low-level API for interacting with data:
+Hazel реализует их подобие.
 
-- `seek-datoms`
-- `datoms`
+Давайте рассмотрим Datomic и DataScript на JVM, позже мы рассмотрим DataScript в JS рантайме.
+В процессе выполнения запроса они обращаются к storage segments расположенными на диске или в удаленном хранилище
+используя блокирующий ввод-вывод.
+Результат запросов - ленивая коллекция, означает, что мы можем, например прочитать базу данных, большую чем оперативная память.
+Или мы можем прервать выполнение, и это становит загрузку следующих сегментов.
 
-## Asynchronous APIs
+DataScript для ClojureScript переиспользует код JVM версии, и имеет аналогичный API.
+Но в отличие от JVM, в JS нельзя использовать блокирующие запросы для получения сегментов.
+И в брауезер DataScript может работать только с данными в оперативной памяти.
+
+Hazel призван решить эту проблему.
+В JS мире вместо ленивых последовательностей используют функции-генераторы
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*#description
+Но кроме ленивости нам нужно выполнять асинхронную загрузку сегментов.
+Тут нам на помощь приходят AsyncGenerators.
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*#description
+
+
+```javascript
+for async (const [e, _a, _v] of db.ave.datoms('task/completed', true)) {
+  // тут мы получим датомы, но нам нужны только идентификаторы
+  // сущности, что мы и получим через дестракчеринг
+
+  // ....
+}
+```
+
+в свою очередь мы можем получить сущности так:
+
+```javascript
+const todo = {
+  id: e,
+}
+for async (const [_e, a, v] of db.eav.datoms(e)) {
+  todo[a] = v;
+}
+```
+
+В качестве кэша для сегментов используется Cache API
+https://developer.mozilla.org/en-US/docs/Web/API/CacheStorage
+
+
+тут бы вывод какой-то положить.
+Типа с таким подходом, читая покрывающие индексы, мы можем выполнять все привычиные запросы к базе данных.
+
+
+
+
+## Asynchronous APIs  (уже не нужно, можено от сюда надергать фраз)
 
 In both **Clojure(Script)** and **JavaScript**, these APIs expose data using idiomatic tools for each ecosystem. In Clojure(Script), the methods return **lazy sequences**, enabling on-demand processing. In JavaScript, the equivalent of lazy sequences is a **Generator** (`function*/yield`). However, since nodes are requested asynchronously over the network, Hazel leverages asynchronous generators (**AsyncGenerator**) to manage this process.
 
