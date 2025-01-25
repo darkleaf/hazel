@@ -58,9 +58,9 @@ Each node of the tree corresponds to a **storage segment**, serialized and store
 
 ## Database Implementation
 
-In DataScript, changes are made using transactions represented as [structured data](https://docs.datomic.com/transactions/transaction-data-reference.html#tx-data). While a comprehensive understanding of the entire transaction process is not required, it’s important to note that transactions are represented as a collections of **datoms**. Each Datom in transaction includes a flag that indicates whether it will be **added** to or **removed** from the database.
+In DataScript, changes are made using transactions, which are represented as [structured data](https://docs.datomic.com/transactions/transaction-data-reference.html#tx-data). While a comprehensive understanding of the entire transaction process is not required, it’s important to note that transactions are represented as a collections of **datoms**. Each Datom in transaction includes a flag that indicates whether it will be **added** to or **removed** from the database.
 
-Since **persistent data structures** can lead to high overhead when updating the entire tree for every transaction, DataScript employs an optimization mechanism that relies on a append-only "tail" for managing updates:
+Since **persistent data structures** can lead to high overhead when updating the entire tree for every transaction, DataScript employs an optimization mechanism that relies on an append-only "tail" for managing updates:
 
 1. Changes are stored in the "tail".
 2. Once the size of the tail becomes comparable to a tree node, the "tail" is "flushed" into the tree.
