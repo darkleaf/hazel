@@ -27,18 +27,8 @@ More info you can find in [Datomic Introduction](https://docs.datomic.com/datomi
 
 # How does it work?
 
-//  Нужно это утверждение на самый верх поставить, что Орешник читает деревья от Датаскрипт.
-
-***Hazel*** supports reading the indexes built by DataScript.
-// и он не supports, а это прямо читалка индексов.
-
-
-***Hazel*** operates on the frontend by interacting with the **storage segments** of a **[DataScript](https://github.com/tonsky/datascript/) database**
-Орешник читает базу данных Датаскрипта.
-Читает ее асинхрнонно, в отличие от Датаскрипта, который имеет синхронное API.
-И кэширует сегменты в браузере.
-
-Далее мы разберем подробности.
+***Hazel*** was designed to read the indexes built by **[DataScript](https://github.com/tonsky/datascript/).
+But, unlike DataScript, it provides asynchronious API for data quering and loads storage segments on-demand.
 
 You should first be familiar with the **DataScript** or **Datomic** data model. If not, please refer to the following resources:
 
