@@ -88,44 +88,32 @@ Ultimately Datomic и DataScript have low-level API for quering data:
 
 Hazel implements similar low-level API.
 
-Давайте рассмотрим Datomic и DataScript на JVM, позже мы рассмотрим DataScript в JS рантайме.
-В процессе выполнения запроса они обращаются к storage segments расположенными на диске или в удаленном хранилище
-используя блокирующий ввод-вывод.
-Результат запросов - ленивая коллекция, означает, что мы можем, например прочитать базу данных, большую чем оперативная память.
-Или мы можем прервать выполнение, и это становит загрузку следующих сегментов.
-
 Firstly, let's consider Datomic and DataScript implentations for JVM.
 When quering data, they access storage segments stored remotely or in the local cache.
-Blocking IO is utilized during this access. The result of the queries is a lazy sequence. 
+Blocking I/O is utilized during this access. The result of the queries is a lazy sequence. 
 Here we have an advantage:
   1. We have an ability to process data exceeding local RAM;
   2. We have an ability to stop consuming of the lazy sequence. As a result loading of the next segments will be stopped.
 
-DataScript для ClojureScript переиспользует код JVM версии, и имеет аналогичный API.
-Но в отличие от JVM, в JS нельзя использовать блокирующие запросы для получения сегментов.
-И в брауезер DataScript может работать только с данными в оперативной памяти.
-
 Secondly, let's consider DataScript implementation for ClojureScript (JS). 
 It shares the same code with the JVM implementation. As a result it has the same API.
+In JS we can't use blocking I/O to retrieve segments compared to JVM. As a result,
+DataScript can operate only with data stored in RAM.
 
-Hazel призван решить эту проблему.
-В JS мире вместо ленивых последовательностей используют функции-генераторы
-https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*#description
-Но кроме ленивости нам нужно выполнять асинхронную загрузку сегментов.
-Тут нам на помощь приходят AsyncGenerators.
-https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*#description
+*Hezel* is disigned to bypass this limitation.
+In JavaScript, the equivalent of lazy sequences is a [**Generator function**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*#description
+) (`function*/yield`). However, since segments are requested asynchronously over the network, Hazel leverages [**AsyncGenerator**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*#description) to manage this process.
 
+Here are some examples:
 
 ```javascript
 for async (const [e, _a, _v] of db.ave.datoms('task/completed', true)) {
-  // тут мы получим датомы, но нам нужны только идентификаторы
-  // сущности, что мы и получим через дестракчеринг
-
+  // We retrieve the datoms containing attribute `task/completed` and value `true`. 
   // ....
 }
 ```
 
-в свою очередь мы можем получить значение сущности так:
+We can retrieve a value of the entity the following way:
 
 ```javascript
 const todo = {
@@ -136,29 +124,10 @@ for async (const [_e, a, v] of db.eav.datoms(e)) {
 }
 ```
 
-В качестве кэша для сегментов используется Cache API
-https://developer.mozilla.org/en-US/docs/Web/API/CacheStorage
+Take into account that the index name matters. The first example uses **AVE** and the second one uses **EAV**.
 
-
-тут бы вывод какой-то положить.
-Типа с таким подходом, читая покрывающие индексы, мы можем выполнять все привычиные запросы к базе данных.
-
-
-
-
-## Asynchronous APIs  (уже не нужно, можено от сюда надергать фраз)
-
-In both **Clojure(Script)** and **JavaScript**, these APIs expose data using idiomatic tools for each ecosystem. In Clojure(Script), the methods return **lazy sequences**, enabling on-demand processing. In JavaScript, the equivalent of lazy sequences is a **Generator** (`function*/yield`). However, since nodes are requested asynchronously over the network, Hazel leverages asynchronous generators (**AsyncGenerator**) to manage this process.
-
-For example:
-
-```javascript
-for async (const datom of db.eav.seek ....) {
-  ...
-}
-```
-
-This method is both asynchronous and lazy, fetching tree segments incrementally and enabling efficient iteration. By leveraging asynchronous operations, Hazel can handle large datasets efficiently and stop fetching data when no longer needed.
+Finally, it should be stated that the Cache API is utilized to cache segments.
+See the documentation [here](https://developer.mozilla.org/en-US/docs/Web/API/CacheStorage).
 
 ## Learning by Example
 
