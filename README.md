@@ -68,25 +68,25 @@ Each node of the tree corresponds to a **storage segment**, serialized and store
 
 ## Database Implementation
 
-Для изменений данных DataScript использует транзакции, описанные данными. While a comprehensive understanding of the entire transaction process is not required, it’s important to note that transactions are ultimately represented as a collections of **datoms**. Each Datom in transaction includes a flag that indicates whether it will be **added** to or **removed** from the database.
+In DataScript, changes are made using transactions represented as [structured data](https://docs.datomic.com/transactions/transaction-data-reference.html#tx-data). While a comprehensive understanding of the entire transaction process is not required, it’s important to note that transactions are represented as a collections of **datoms**. Each Datom in transaction includes a flag that indicates whether it will be **added** to or **removed** from the database.
 
-Since **persistent data structures** can lead to high overhead when updating the entire tree for every transaction, DataScript employs an optimization mechanism that relies on a tail for managing updates:
+Since **persistent data structures** can lead to high overhead when updating the entire tree for every transaction, DataScript employs an optimization mechanism that relies on a append-only "tail" for managing updates:
 
 1. Changes are stored in the "tail".
-2. Once the size of the tail becomes comparable to a tree node, the tail is "flushed" into the tree.
-  For implementation details, see the [source code](https://github.com/tonsky/datascript/blob/fa222f7b1b05d4382414022ede011c88f3bad462/src/datascript/conn.cljc#L98).
+2. Once the size of the tail becomes comparable to a tree node, the "tail" is "flushed" into the tree.
+   For implementation details, see the [source code](https://github.com/tonsky/datascript/blob/fa222f7b1b05d4382414022ede011c88f3bad462/src/datascript/conn.cljc#L98).
 
 ## Hazel's Peer
 
-В датомике и датаскрипте используются разные API для чтения и изменения данных.
-За чтение данных отвечает Peer libraray, которая позволяет выполнять приложения используя локальный кэш приложения.
+In Datomic and DataScript separated APIs are used for quering data and its mutations.
+Peer library is used to query data. Moreover, it executes queries using a local cache.
 
-Datomic и DataScript имеют низкоуровневые API для доступа к данным, это
+Ultimately Datomic и DataScript have low-level API for quering data:
 
 - [`seek-datoms` ](https://docs.datomic.com/clojure/index.html#datomic.api/seek-datoms)
 - [`datoms`](https://docs.datomic.com/clojure/index.html#datomic.api/datoms)
 
-Hazel реализует их подобие.
+Hazel implements similar low-level API.
 
 Давайте рассмотрим Datomic и DataScript на JVM, позже мы рассмотрим DataScript в JS рантайме.
 В процессе выполнения запроса они обращаются к storage segments расположенными на диске или в удаленном хранилище
@@ -94,9 +94,19 @@ Hazel реализует их подобие.
 Результат запросов - ленивая коллекция, означает, что мы можем, например прочитать базу данных, большую чем оперативная память.
 Или мы можем прервать выполнение, и это становит загрузку следующих сегментов.
 
+Firstly, let's consider Datomic and DataScript implentations for JVM.
+When quering data, they access storage segments stored remotely or in the local cache.
+Blocking IO is utilized during this access. The result of the queries is a lazy sequence. 
+Here we have an advantage:
+  1. We have an ability to process data exceeding local RAM;
+  2. We have an ability to stop consuming of the lazy sequence. As a result loading of the next segments will be stopped.
+
 DataScript для ClojureScript переиспользует код JVM версии, и имеет аналогичный API.
 Но в отличие от JVM, в JS нельзя использовать блокирующие запросы для получения сегментов.
 И в брауезер DataScript может работать только с данными в оперативной памяти.
+
+Secondly, let's consider DataScript implementation for ClojureScript (JS). 
+It shares the same code with the JVM implementation. As a result it has the same API.
 
 Hazel призван решить эту проблему.
 В JS мире вместо ленивых последовательностей используют функции-генераторы
@@ -115,7 +125,7 @@ for async (const [e, _a, _v] of db.ave.datoms('task/completed', true)) {
 }
 ```
 
-в свою очередь мы можем получить сущности так:
+в свою очередь мы можем получить значение сущности так:
 
 ```javascript
 const todo = {
