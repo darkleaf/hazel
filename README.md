@@ -27,7 +27,7 @@ More info you can find in [Datomic Introduction](https://docs.datomic.com/datomi
 
 # How does it work?
 
-***Hazel*** was designed to read the indexes built by **[DataScript](https://github.com/tonsky/datascript/).
+***Hazel*** was designed to read the indexes built by [**DataScript**](https://github.com/tonsky/datascript/).
 But, unlike DataScript, it provides asynchronious API for data quering and loads storage segments on-demand.
 
 You should first be familiar with the **DataScript** or **Datomic** data model. If not, please refer to the following resources:
