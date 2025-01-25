@@ -68,43 +68,42 @@ Since **persistent data structures** can lead to high overhead when updating the
 
 ## Hazel's Peer
 
-In Datomic and DataScript separated APIs are used for quering data and its mutations.
-Peer library is used to query data. Moreover, it executes queries using a local cache.
+In Datomic and DataScript, separate APIs are used for querying and mutating data. The Peer library is responsible for querying data. Moreover, it executes queries using a local cache.
 
-Ultimately Datomic и DataScript have low-level API for quering data:
+Ultimately, Datomic and DataScript provide low-level API for querying data:
 
 - [`seek-datoms` ](https://docs.datomic.com/clojure/index.html#datomic.api/seek-datoms)
 - [`datoms`](https://docs.datomic.com/clojure/index.html#datomic.api/datoms)
 
-Hazel implements similar low-level API.
+*Hazel* implements a similar low-level API.
 
-Firstly, let's consider Datomic and DataScript implentations for JVM.
-When quering data, they access storage segments stored remotely or in the local cache.
-Blocking I/O is utilized during this access. The result of the queries is a lazy sequence. 
-Here we have an advantage:
-  1. We have an ability to process data exceeding local RAM;
-  2. We have an ability to stop consuming of the lazy sequence. As a result loading of the next segments will be stopped.
+First, let's consider the Datomic and DataScript implementations for the JVM.
+When querying data, they access storage segments stored remotely or in a local cache.
+This access uses blocking I/O, and the result of the queries is a lazy sequence. 
 
-Secondly, let's consider DataScript implementation for ClojureScript (JS). 
-It shares the same code with the JVM implementation. As a result it has the same API.
-In JS we can't use blocking I/O to retrieve segments compared to JVM. As a result,
-DataScript can operate only with data stored in RAM.
+Here are the advantages of this approach:
 
-*Hezel* is disigned to bypass this limitation.
+  1. It allows processing data that exceeds the size of RAM.
+  2. It allows stopping lazy sequence consumption, which prevents further loading of the next segments.
+
+Second, let's examine the DataScript implementation for ClojureScript (JS). 
+It shares the same codebase as the JVM implementation and, as a result, has the same API. However, in JavaScript, blocking I/O cannot be used for retrieving segments, unlike in the JVM. This limitation means that DataScript in JavaScript can operate only with data stored in RAM.
+
+*Hazel* is designed to overcome this limitation.
 In JavaScript, the equivalent of lazy sequences is a [**Generator function**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*#description
-) (`function*/yield`). However, since segments are requested asynchronously over the network, Hazel leverages [**AsyncGenerator**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*#description) to manage this process.
+) (`function*/yield`). However, since segments are requested asynchronously over the network, Hazel uses [**AsyncGenerator**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*#description) to manage this process.
 
 Here are some examples:
 
+**Retrieving Datoms:**
 ```javascript
 for async (const [e, _a, _v] of db.ave.datoms('task/completed', true)) {
-  // We retrieve the datoms containing attribute `task/completed` and value `true`. 
-  // ....
+  // Retrieve datoms with the attribute `task/completed` and value `true`. 
+  // ...
 }
 ```
 
-We can retrieve a value of the entity the following way:
-
+**Retrieving Entity Values:**
 ```javascript
 const todo = {
   id: e,
@@ -114,10 +113,10 @@ for async (const [_e, a, v] of db.eav.datoms(e)) {
 }
 ```
 
-Take into account that the index name matters. The first example uses **AVE** and the second one uses **EAV**.
+**NOTE:** The index name matters. In the first example, the **AVE** index is used, while in the second example, the **EAV** index is used.
 
-Finally, it should be stated that the Cache API is utilized to cache segments.
-See the documentation [here](https://developer.mozilla.org/en-US/docs/Web/API/CacheStorage).
+Finally, the Cache API is used to cache segments.
+For more details, see the documentation [here](https://developer.mozilla.org/en-US/docs/Web/API/CacheStorage).
 
 ## Learning by Example
 
