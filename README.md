@@ -11,6 +11,7 @@ The project is built upon the React TodoMVC framework.
 
 The project's capabilities include:
 
+- Range queries.
 - Lazy iteration over databases by fetching database segments on-demand from the backend.
 - Long-term storage of these segments within the browser cache.
 - Getting a consistent snapshot of a database.
@@ -25,18 +26,106 @@ In contrast, a Datomic-like system enables you to execute queries within your ap
 
 More info you can find in [Datomic Introduction](https://docs.datomic.com/datomic-overview.html).
 
-# Techincal information
+# How does it work?
 
-DataScript uses a persistent B+ tree sorted set to store the database's indices.
+***Hazel*** is designed to read indexes built by [**DataScript**](https://github.com/tonsky/datascript/).
+However, unlike DataScript, it provides an asynchronous API for data querying and loads storage segments on-demand.
 
-Hazel fetches and caches nodes (segments) of DataScript's trees and lazily iterates over them.
+You should first be familiar with the **DataScript** or **Datomic** data model. If not, please refer to the following resources:
 
-For the lazy sequence abstraction, I chose AsyncGenerators.
+- [Information Model](https://docs.datomic.com/datomic-overview.html#information-model)
+- [Indexes](https://docs.datomic.com/datomic-overview.html#indexes)
 
-+ https://github.com/tonsky/persistent-sorted-set
-+ https://github.com/tonsky/datascript/blob/master/docs/storage.md
-+ https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator
-+ https://github.com/tonsky/persistent-sorted-set/pull/14
+## Datoms and Indexes
+
+The **DataScript database** operates on **datoms**, which are atomic units of data. Each Datom is represented as a tuple `(E, A, V)`, where:
+
+- `E` stands for the **entity ID**,
+- `A` for the **attribute**, and
+- `V` for the **value**.
+
+These elements form the core structure of a Datom. To efficiently organize datoms, DataScript uses three indexes: **EAV**, **AEV**, and **AVE**. The name of each index reflects the order in which datoms are sorted:
+
+- **EAV**: Sorted by entity ID, then attribute, then value.
+- **AEV** and **AVE**: Follow analogous patterns.
+
+While datoms in **Datomic** and **DataScript** also include an additional element `T` (Transaction ID), Hazel simplifies the model by excluding this component.
+
+## Index Implementation
+
+The **indexes in DataScript** are implemented as **Persistent Sorted Sets**, a type of immutable data structure based on **B+ trees**. These structures are optimized for storing elements in sorted order and enable efficient operations such as lookups, insertions, and deletions, with a time complexity of $$O(\log n)$$. Functional immutability is achieved through **structural sharing**, ensuring that updates reuse existing data whenever possible. A detailed explanation of B-trees, including their variation B+ trees, can be found in the paper ["The Ubiquitous B-Tree"](https://carlosproal.com/ir/papers/p121-comer.pdf) by Douglas Comer.
+
+Each node of the tree corresponds to a **storage segment**, serialized and stored persistently. **Branch nodes** contain keys and addresses for navigation, while **leaf nodes** store ordered sequences of keys (datoms).
+
+## Database Implementation
+
+In DataScript, changes are made using transactions, which are represented as [structured data](https://docs.datomic.com/transactions/transaction-data-reference.html#tx-data). While a comprehensive understanding of the entire transaction process is not required, it’s important to note that transactions are represented as a collections of **datoms**. Each Datom in transaction includes a flag that indicates whether it will be **added** to or **removed** from the database.
+
+Since **persistent data structures** can lead to high overhead when updating the entire tree for every transaction, DataScript employs an optimization mechanism that relies on an append-only "tail" for managing updates:
+
+1. Changes are stored in the "tail".
+2. Once the size of the tail becomes comparable to a tree node, the "tail" is "flushed" into the tree.
+   For implementation details, see the [source code](https://github.com/tonsky/datascript/blob/fa222f7b1b05d4382414022ede011c88f3bad462/src/datascript/conn.cljc#L98).
+
+## Hazel's Peer
+
+In Datomic and DataScript, separate APIs are used for querying and mutating data. The Peer library is responsible for querying data. Moreover, it executes queries using a local cache.
+
+Ultimately, Datomic and DataScript provide low-level API for querying data:
+
+- [`seek-datoms` ](https://docs.datomic.com/clojure/index.html#datomic.api/seek-datoms)
+- [`datoms`](https://docs.datomic.com/clojure/index.html#datomic.api/datoms)
+
+*Hazel* implements a similar low-level API.
+
+First, let's consider the Datomic and DataScript implementations for the JVM.
+When querying data, they access storage segments stored remotely or in a local cache.
+This access uses blocking I/O, and the result of the queries is a lazy sequence.
+
+Here are the advantages of this approach:
+
+  1. It allows processing data that exceeds the size of RAM.
+  2. It allows stopping lazy sequence consumption, which prevents further loading of the next segments.
+
+Second, let's examine the DataScript implementation for ClojureScript (JS).
+It shares the same codebase as the JVM implementation and, as a result, has the same API. However, in JavaScript, blocking I/O cannot be used for retrieving segments, unlike in the JVM. This limitation means that DataScript in JavaScript can operate only with data stored in RAM.
+
+*Hazel* is designed to overcome this limitation.
+In JavaScript, the equivalent of lazy sequences is a [**Generator function**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*#description
+) (`function*/yield`). However, since segments are requested asynchronously over the network, Hazel uses [**AsyncGenerator**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*#description) to manage this process.
+
+Here are some examples:
+
+**A range query:**
+```javascript
+for async (const [e, _a, _v] of db.ave.datoms('task/completed', true)) {
+  // Retrieve datoms with the attribute `task/completed` and value `true`.
+  // ...
+}
+```
+
+**Retrieving  all atriibutes of an Entity:**
+```javascript
+const todo = {
+  id: e,
+}
+for async (const [_e, a, v] of db.eav.datoms(e)) {
+  todo[a] = v;
+}
+```
+
+**NOTE:** The index name matters. In the first example, the **AVE** index is used, while in the second example, the **EAV** index is used.
+
+Finally, the Cache API is used to cache segments.
+For more details, see the documentation [here](https://developer.mozilla.org/en-US/docs/Web/API/CacheStorage).
+
+## Learning by Example
+
+A motivated reader can easily grasp these concepts by reviewing the provided tests, which offer clear examples and practical insights. Additional details on persistent B+ trees and storage mechanisms in DataScript can be found in the following references:
+
+- [Persistent Sorted Set Documentation](https://github.com/tonsky/persistent-sorted-set)
+- [DataScript Storage](https://github.com/tonsky/datascript/blob/master/docs/storage.md)
+- [Datomic Data Model](https://docs.datomic.com/whatis/data-model.html#datalog)
 
 # Limitations
 
