@@ -80,14 +80,14 @@ Ultimately, Datomic and DataScript provide low-level API for querying data:
 
 First, let's consider the Datomic and DataScript implementations for the JVM.
 When querying data, they access storage segments stored remotely or in a local cache.
-This access uses blocking I/O, and the result of the queries is a lazy sequence. 
+This access uses blocking I/O, and the result of the queries is a lazy sequence.
 
 Here are the advantages of this approach:
 
   1. It allows processing data that exceeds the size of RAM.
   2. It allows stopping lazy sequence consumption, which prevents further loading of the next segments.
 
-Second, let's examine the DataScript implementation for ClojureScript (JS). 
+Second, let's examine the DataScript implementation for ClojureScript (JS).
 It shares the same codebase as the JVM implementation and, as a result, has the same API. However, in JavaScript, blocking I/O cannot be used for retrieving segments, unlike in the JVM. This limitation means that DataScript in JavaScript can operate only with data stored in RAM.
 
 *Hazel* is designed to overcome this limitation.
@@ -99,7 +99,7 @@ Here are some examples:
 **Retrieving Datoms:**
 ```javascript
 for async (const [e, _a, _v] of db.ave.datoms('task/completed', true)) {
-  // Retrieve datoms with the attribute `task/completed` and value `true`. 
+  // Retrieve datoms with the attribute `task/completed` and value `true`.
   // ...
 }
 ```
