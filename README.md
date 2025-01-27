@@ -96,7 +96,7 @@ In JavaScript, the equivalent of lazy sequences is a [**Generator function**](ht
 
 Here are some examples:
 
-**Retrieving Datoms:**
+**A range query:**
 ```javascript
 for async (const [e, _a, _v] of db.ave.datoms('task/completed', true)) {
   // Retrieve datoms with the attribute `task/completed` and value `true`.
@@ -104,7 +104,7 @@ for async (const [e, _a, _v] of db.ave.datoms('task/completed', true)) {
 }
 ```
 
-**Retrieving Entity Values:**
+**Retrieving  all atriibutes of an Entity:**
 ```javascript
 const todo = {
   id: e,
