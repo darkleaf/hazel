@@ -11,6 +11,7 @@ The project is built upon the React TodoMVC framework.
 
 The project's capabilities include:
 
+- Range queries.
 - Lazy iteration over databases by fetching database segments on-demand from the backend.
 - Long-term storage of these segments within the browser cache.
 - Getting a consistent snapshot of a database.
